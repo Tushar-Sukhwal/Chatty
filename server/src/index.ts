@@ -16,7 +16,11 @@ import { consumeMessages } from "./helper.js";
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: [process.env.CLIENT_APP_URL, "https://admin.socket.io"],
+    origin: [
+      process.env.CLIENT_APP_URL,
+      "https://admin.socket.io",
+      "https://chat.tusharsukhwal.com",
+    ],
   },
   adapter: createAdapter(redis),
 });
@@ -30,7 +34,12 @@ export { io };
 setupSocket(io);
 
 // * Middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: [process.env.CLIENT_APP_URL, "https://chat.tusharsukhwal.com"],
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 

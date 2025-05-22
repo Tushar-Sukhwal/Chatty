@@ -6,7 +6,7 @@ import { redirect, useRouter } from "next/navigation";
 import { useChatsStore } from "@/store/useChatsStore";
 import { Button } from "@/components/ui/button";
 import { Loader2, Users, ArrowRight } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 
 export default function JoinGroupPage({
   params,
@@ -25,17 +25,13 @@ export default function JoinGroupPage({
 
   const { joinGroup } = useChatsStore();
   const router = useRouter();
-  const { toast } = useToast();
 
   const handleJoinGroup = async () => {
     setIsJoining(true);
     try {
       await joinGroup(params.shareLink);
       setHasJoined(true);
-      toast({
-        title: "Success",
-        description: "You have joined the group chat",
-      });
+      toast.success("You have joined the group chat");
 
       // Redirect to dashboard after a short delay
       setTimeout(() => {
@@ -43,12 +39,9 @@ export default function JoinGroupPage({
       }, 1500);
     } catch (error) {
       console.error("Error joining group:", error);
-      toast({
-        title: "Error",
-        description:
-          "Failed to join the group. The link may be invalid or you're already a member.",
-        variant: "destructive",
-      });
+      toast.error(
+        "Failed to join the group. The link may be invalid or you're already a member."
+      );
     } finally {
       setIsJoining(false);
     }

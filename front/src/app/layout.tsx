@@ -4,7 +4,6 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import SessionProvider from "@/providers/SessionProvider";
 import { Toaster } from "@/components/ui/sonner";
-import { AuthInterceptor } from "./_app";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -14,6 +13,9 @@ const fontSans = FontSans({
 export const metadata: Metadata = {
   title: "QuickChat",
   description: "Quick Chat App",
+  other: {
+    "permissions-policy": "browsing-topics=()",
+  },
 };
 
 export default function RootLayout({
@@ -23,18 +25,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <SessionProvider>
-        <body
-          className={cn(
-            "min-h-screen bg-background font-sans antialiased",
-            fontSans.variable
-          )}
-        >
-          <AuthInterceptor />
+      <body
+        className={cn(
+          "min-h-screen bg-background font-sans antialiased",
+          fontSans.variable
+        )}
+      >
+        <SessionProvider>
           {children}
           <Toaster richColors duration={5000} />
-        </body>
-      </SessionProvider>
+        </SessionProvider>
+      </body>
     </html>
   );
 }
