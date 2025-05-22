@@ -120,43 +120,72 @@ export const useChatsStore = create<ChatsStore>((set, get) => ({
     const socket = getSocket();
     const userId = get().currentUser?.id.toString();
 
-    // If switching chats, disconnect from previous chat room
-    if (get().activeChatId && socket.connected) {
+    // Clear existing socket listeners to prevent memory leaks
+    if (socket.connected) {
+      socket.off("message");
+      socket.off("typing_status");
+      socket.off("user_status");
       socket.disconnect();
     }
 
+    // Reset state for new chat
     set({
       activeChatId: chatId,
       activeChatType: chatType,
       loadingMessages: true,
-      messages: [],
+      messages: [], // Always initialize as empty array
     });
 
     // Connect to the appropriate room
-    if (!socket.connected) {
-      socket.auth = { room: chatId, userId };
-      socket.connect();
+    socket.auth = { room: chatId, userId };
+    socket.connect();
 
-      // Set up socket event listeners
-      socket.on("message", (message: MessageType) => {
+    // Set up socket event listeners with safe state handling
+    socket.on("message", (message: MessageType) => {
+      if (!message || typeof message !== "object") return;
+
+      try {
         set((state) => {
-          // Check if message already exists to prevent duplicates from optimistic updates
-          if (!state.messages.find((m) => m.id === message.id)) {
-            return { messages: [...state.messages, message] };
+          // Safely handle potential undefined state
+          const currentState = state || { messages: [] };
+          const currentMessages = Array.isArray(currentState.messages)
+            ? currentState.messages
+            : [];
+
+          // Check for duplicates safely
+          const isDuplicate = currentMessages.some((m) => m?.id === message.id);
+
+          if (!isDuplicate) {
+            return { ...currentState, messages: [...currentMessages, message] };
           }
-          return state; // Return current state if message is a duplicate
+
+          return currentState;
         });
-      });
+      } catch (error) {
+        console.error("Error handling message event:", error);
+      }
+    });
 
-      socket.on("typing_status", (status: TypingStatusType) => {
-        get().updateTypingStatus(status);
-      });
+    socket.on("typing_status", (status: TypingStatusType) => {
+      try {
+        if (status && typeof status === "object") {
+          get().updateTypingStatus(status);
+        }
+      } catch (error) {
+        console.error("Error handling typing status:", error);
+      }
+    });
 
-      socket.on("user_status", (status: UserStatusType) => {
-        console.log('[Socket Event] Received "user_status":', status);
-        get().updateOnlineStatus(status);
-      });
-    }
+    socket.on("user_status", (status: UserStatusType) => {
+      try {
+        if (status && typeof status === "object") {
+          console.log('[Socket Event] Received "user_status":', status);
+          get().updateOnlineStatus(status);
+        }
+      } catch (error) {
+        console.error("Error handling user status:", error);
+      }
+    });
 
     try {
       // Get chat messages
@@ -220,6 +249,10 @@ export const useChatsStore = create<ChatsStore>((set, get) => ({
     if (!activeChatId || !currentUser) return;
 
     const socket = getSocket();
+    if (!socket || !socket.connected) {
+      console.error("Socket not connected when trying to send message");
+      return;
+    }
 
     try {
       const messageData: any = {
@@ -243,9 +276,18 @@ export const useChatsStore = create<ChatsStore>((set, get) => ({
       socket.emit("message", messageData);
 
       // Add message to local state immediately for better UX
-      set((state) => ({
-        messages: [...state.messages, messageData],
-      }));
+      set((state) => {
+        // Safely handle potential undefined state
+        const currentState = state || {};
+        const currentMessages = Array.isArray(currentState.messages)
+          ? currentState.messages
+          : [];
+
+        return {
+          ...currentState,
+          messages: [...currentMessages, messageData],
+        };
+      });
     } catch (error) {
       console.error("Error sending message:", error);
     }
@@ -356,75 +398,118 @@ export const useChatsStore = create<ChatsStore>((set, get) => ({
 
   // Update online status for a user
   updateOnlineStatus: (status: UserStatusType) => {
-    const { userId, status: onlineStatus } = status;
-    console.log(
-      `[updateOnlineStatus] Processing status for User ID: ${userId}, Status: ${onlineStatus}`
-    );
+    try {
+      if (!status || typeof status !== "object") return;
 
-    set((state) => {
-      // Update online status for chat members
-      const updatedChatMembers = state.chatMembers.map((member) => {
-        if (member.user && member.user.id.toString() === userId) {
-          console.log(
-            `[updateOnlineStatus] Updating chatMember ${member.user.name} (${
-              member.user.id
-            }) to isOnline: ${onlineStatus === "online"}`
-          );
-          return {
-            ...member,
-            user: {
-              ...member.user,
-              isOnline: onlineStatus === "online",
-            },
-          };
+      const { userId, status: onlineStatus } = status;
+      if (!userId) return;
+
+      console.log(
+        `[updateOnlineStatus] Processing status for User ID: ${userId}, Status: ${onlineStatus}`
+      );
+
+      set((state) => {
+        if (!state)
+          return { chatMembers: [], directChats: [], onlineUsers: [] };
+
+        // Safely get arrays, defaulting to empty if undefined
+        const chatMembers = Array.isArray(state.chatMembers)
+          ? state.chatMembers
+          : [];
+        const directChats = Array.isArray(state.directChats)
+          ? state.directChats
+          : [];
+        const onlineUsers = Array.isArray(state.onlineUsers)
+          ? state.onlineUsers
+          : [];
+
+        // Update online status for chat members
+        const updatedChatMembers = chatMembers.map((member) => {
+          if (
+            member?.user &&
+            member.user.id &&
+            member.user.id.toString() === userId
+          ) {
+            console.log(
+              `[updateOnlineStatus] Updating chatMember ${member.user.name} (${
+                member.user.id
+              }) to isOnline: ${onlineStatus === "online"}`
+            );
+            return {
+              ...member,
+              user: {
+                ...member.user,
+                isOnline: onlineStatus === "online",
+              },
+            };
+          }
+          return member;
+        });
+
+        // Update online status for direct chats
+        const updatedDirectChats = directChats.map((chat) => {
+          if (chat?.otherUser?.id && chat.otherUser.id.toString() === userId) {
+            console.log(
+              `[updateOnlineStatus] Updating directChat with otherUser ${
+                chat.otherUser.name
+              } (${chat.otherUser.id}) to isOnline: ${
+                onlineStatus === "online"
+              }`
+            );
+            return {
+              ...chat,
+              otherUser: {
+                ...chat.otherUser,
+                isOnline: onlineStatus === "online",
+              },
+            };
+          }
+          return chat;
+        });
+
+        // Update online users array
+        let updatedOnlineUsers = [...onlineUsers];
+        if (onlineStatus === "online" && !updatedOnlineUsers.includes(userId)) {
+          updatedOnlineUsers.push(userId);
+        } else if (onlineStatus === "offline") {
+          updatedOnlineUsers = updatedOnlineUsers.filter((id) => id !== userId);
         }
-        return member;
+
+        return {
+          ...state,
+          chatMembers: updatedChatMembers,
+          directChats: updatedDirectChats,
+          onlineUsers: updatedOnlineUsers,
+        };
       });
-
-      // Update online status for direct chats
-      const updatedDirectChats = state.directChats.map((chat) => {
-        if (chat.otherUser.id.toString() === userId) {
-          console.log(
-            `[updateOnlineStatus] Updating directChat with otherUser ${
-              chat.otherUser.name
-            } (${chat.otherUser.id}) to isOnline: ${onlineStatus === "online"}`
-          );
-          return {
-            ...chat,
-            otherUser: {
-              ...chat.otherUser,
-              isOnline: onlineStatus === "online",
-            },
-          };
-        }
-        return chat;
-      });
-
-      // Update online users array
-      let updatedOnlineUsers = [...state.onlineUsers];
-      if (onlineStatus === "online" && !updatedOnlineUsers.includes(userId)) {
-        updatedOnlineUsers.push(userId);
-      } else if (onlineStatus === "offline") {
-        updatedOnlineUsers = updatedOnlineUsers.filter((id) => id !== userId);
-      }
-
-      return {
-        chatMembers: updatedChatMembers,
-        directChats: updatedDirectChats,
-        onlineUsers: updatedOnlineUsers,
-      };
-    });
+    } catch (error) {
+      console.error("Error updating online status:", error);
+    }
   },
 
   // Update typing status
   updateTypingStatus: (status: TypingStatusType) => {
-    const { users, roomId } = status;
+    try {
+      if (!status || typeof status !== "object") return;
 
-    set((state) => ({
-      typingUsers: {
-        ...state.typingUsers,
-        [roomId]: users,
-      },
-    }));
+      const { users, roomId } = status;
+      if (!roomId || !users) return;
+
+      set((state) => {
+        if (!state) return { typingUsers: { [roomId]: users } };
+
+        const currentTypingUsers = state.typingUsers || {};
+
+        return {
+          ...state,
+          typingUsers: {
+            ...currentTypingUsers,
+            [roomId]: users,
+          },
+        };
+      });
+    } catch (error) {
+      console.error("Error updating typing status:", error);
+    }
   },
 }));
