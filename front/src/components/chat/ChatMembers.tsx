@@ -102,7 +102,7 @@ export default function ChatMembers({
               </Avatar>
               <div>
                 <p className="text-sm font-medium flex items-center">
-                  {member.name}
+                  {member.user?.name}
                   {member.user?.isOnline && (
                     <span className="ml-2 h-2 w-2 rounded-full bg-green-500"></span>
                   )}

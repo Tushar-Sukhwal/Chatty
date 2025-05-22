@@ -100,7 +100,13 @@ export const useChatsStore = create<ChatsStore>((set, get) => ({
     try {
       const response = await axios.get(`${Env.BACKEND_URL}/api/direct-chats`);
       set({
-        directChats: response.data.directChats,
+        directChats: response.data.directChats.map((chat: DirectChatType) => ({
+          ...chat,
+          otherUser: {
+            ...chat.otherUser,
+            isOnline: chat.otherUser.isOnline || false,
+          },
+        })),
         loadingDirectChats: false,
       });
     } catch (error) {
@@ -133,9 +139,13 @@ export const useChatsStore = create<ChatsStore>((set, get) => ({
 
       // Set up socket event listeners
       socket.on("message", (message: MessageType) => {
-        set((state) => ({
-          messages: [...state.messages, message],
-        }));
+        set((state) => {
+          // Check if message already exists to prevent duplicates from optimistic updates
+          if (!state.messages.find((m) => m.id === message.id)) {
+            return { messages: [...state.messages, message] };
+          }
+          return state; // Return current state if message is a duplicate
+        });
       });
 
       socket.on("typing_status", (status: TypingStatusType) => {
@@ -143,6 +153,7 @@ export const useChatsStore = create<ChatsStore>((set, get) => ({
       });
 
       socket.on("user_status", (status: UserStatusType) => {
+        console.log('[Socket Event] Received "user_status":', status);
         get().updateOnlineStatus(status);
       });
     }
@@ -156,9 +167,7 @@ export const useChatsStore = create<ChatsStore>((set, get) => ({
           `${Env.BACKEND_URL}/api/direct-chats/${chatId}/messages`
         );
       } else {
-        response = await axios.get(
-          `${Env.BACKEND_URL}/api/chats/group/${chatId}`
-        );
+        response = await axios.get(`${Env.BACKEND_URL}/api/groups/${chatId}`);
       }
 
       // Get chat members if it's a group chat
@@ -170,6 +179,34 @@ export const useChatsStore = create<ChatsStore>((set, get) => ({
       }
 
       set({ messages: response.data.messages, loadingMessages: false });
+
+      // Ensure online status is up-to-date for direct chats
+      // Commenting out this block as onlineUsers should be managed by updateOnlineStatus from socket events
+      /*
+      if (chatType === "direct") {
+        const currentDirectChat = get().directChats.find(
+          (dc) => dc.id === chatId
+        );
+        if (currentDirectChat && currentDirectChat.otherUser) {
+          const otherUserId = currentDirectChat.otherUser.id.toString();
+          const isOtherUserOnline = currentDirectChat.otherUser.isOnline;
+
+          set((state) => {
+            let updatedOnlineUsers = [...state.onlineUsers];
+            const userInList = updatedOnlineUsers.includes(otherUserId);
+
+            if (isOtherUserOnline && !userInList) {
+              updatedOnlineUsers.push(otherUserId);
+            } else if (!isOtherUserOnline && userInList) {
+              updatedOnlineUsers = updatedOnlineUsers.filter(
+                (id) => id !== otherUserId
+              );
+            }
+            return { onlineUsers: updatedOnlineUsers };
+          });
+        }
+      }
+      */
     } catch (error) {
       console.error("Error setting active chat:", error);
       set({ loadingMessages: false });
@@ -320,11 +357,19 @@ export const useChatsStore = create<ChatsStore>((set, get) => ({
   // Update online status for a user
   updateOnlineStatus: (status: UserStatusType) => {
     const { userId, status: onlineStatus } = status;
+    console.log(
+      `[updateOnlineStatus] Processing status for User ID: ${userId}, Status: ${onlineStatus}`
+    );
 
     set((state) => {
       // Update online status for chat members
       const updatedChatMembers = state.chatMembers.map((member) => {
         if (member.user && member.user.id.toString() === userId) {
+          console.log(
+            `[updateOnlineStatus] Updating chatMember ${member.user.name} (${
+              member.user.id
+            }) to isOnline: ${onlineStatus === "online"}`
+          );
           return {
             ...member,
             user: {
@@ -339,6 +384,11 @@ export const useChatsStore = create<ChatsStore>((set, get) => ({
       // Update online status for direct chats
       const updatedDirectChats = state.directChats.map((chat) => {
         if (chat.otherUser.id.toString() === userId) {
+          console.log(
+            `[updateOnlineStatus] Updating directChat with otherUser ${
+              chat.otherUser.name
+            } (${chat.otherUser.id}) to isOnline: ${onlineStatus === "online"}`
+          );
           return {
             ...chat,
             otherUser: {

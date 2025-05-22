@@ -9,6 +9,7 @@ import {
   MoreVertical,
   Copy,
   Link as LinkIcon,
+  Trash2,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -26,14 +27,22 @@ import {
 import { useChatsStore } from "@/store/useChatsStore";
 import { toast } from "sonner";
 import Env from "@/lib/env";
+import DeleteChatGroup from "@/components/chatGroup/DeleteChatGroup";
+import { CustomUser } from "@/app/api/auth/[...nextauth]/options";
 
 interface ChatHeaderProps {
   chat: GroupChatType | DirectChatType;
   chatType: ChatType;
+  currentUser: CustomUser | null;
 }
 
-export default function ChatHeader({ chat, chatType }: ChatHeaderProps) {
+export default function ChatHeader({
+  chat,
+  chatType,
+  currentUser,
+}: ChatHeaderProps) {
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   // Get the share link for group chats
   const shareLink =
@@ -127,6 +136,15 @@ export default function ChatHeader({ chat, chatType }: ChatHeaderProps) {
               <Users className="mr-2 h-4 w-4" />
               View Members
             </DropdownMenuItem>
+            {chatType === "group" && (chat as GroupChatType).is_owner && (
+              <DropdownMenuItem
+                onClick={() => setDeleteDialogOpen(true)}
+                className="text-red-600 dark:text-red-500 hover:text-red-600 dark:hover:text-red-500"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Group
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -158,6 +176,16 @@ export default function ChatHeader({ chat, chatType }: ChatHeaderProps) {
             </div>
           </DialogContent>
         </Dialog>
+      )}
+
+      {/* Delete Group Dialog */}
+      {chatType === "group" && currentUser && (
+        <DeleteChatGroup
+          open={deleteDialogOpen}
+          setOpen={setDeleteDialogOpen}
+          groupId={(chat as GroupChatType).id}
+          token={currentUser.token!}
+        />
       )}
     </header>
   );

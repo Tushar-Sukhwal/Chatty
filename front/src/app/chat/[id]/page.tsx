@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { useChatsStore } from "@/store/useChatsStore";
 import { useSession } from "next-auth/react";
@@ -11,6 +11,7 @@ import ChatMessages from "@/components/chat/ChatMessages";
 import ChatInput from "@/components/chat/ChatInput";
 import ChatMembers from "@/components/chat/ChatMembers";
 import { CustomUser } from "@/app/api/auth/[...nextauth]/options";
+import { getSocket } from "@/lib/socket.config";
 // ChatType is already available from the store
 
 export default function ChatPage({ params }: { params: { id: string } }) {
@@ -109,7 +110,11 @@ export default function ChatPage({ params }: { params: { id: string } }) {
         }`}
       >
         <div className="h-full flex flex-col">
-          <ChatHeader chat={activeChat} chatType={chatType} />
+          <ChatHeader
+            chat={activeChat}
+            chatType={chatType}
+            currentUser={currentUser as CustomUser | null}
+          />
 
           <div className="flex-1 flex overflow-hidden">
             <div className="flex-1 flex flex-col">

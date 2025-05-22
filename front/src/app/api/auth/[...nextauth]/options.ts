@@ -9,7 +9,7 @@ export interface CustomSession {
   expires: ISODateString;
 }
 export interface CustomUser {
-  id?: string | null;
+  id?: string | number | null;
   name?: string | null;
   email?: string | null;
   image?: string | null;

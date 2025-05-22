@@ -19,37 +19,46 @@ export default function Chats({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  let socket = useMemo(() => {
-    const socket = getSocket();
-    socket.auth = {
-      room: group.id,
-    };
-    return socket.connect();
-  }, []);
-  useEffect(() => {
-    socket.on("message", (data: MessageType) => {
-      console.log("The message is", data);
-      setMessages((prevMessages) => [...prevMessages, data]);
-      scrollToBottom();
-    });
+  // Get the socket instance. Assume it's managed (connected/disconnected, room) by useChatsStore.
+  const socket = getSocket();
 
-    return () => {
-      socket.close();
+  useEffect(() => {
+    // Listener for new messages for this specific chat
+    const handleNewMessage = (data: MessageType) => {
+      // Ensure message is for the current group/chat before adding
+      // TODO: Adjust this check if Chats.tsx is also used for direct chats (e.g., check data.direct_chat_id)
+      if (data.group_id === group.id) {
+        console.log("The message is", data);
+        setMessages((prevMessages) => [...prevMessages, data]);
+        scrollToBottom();
+      }
     };
-  }, []);
+
+    socket.on("message", handleNewMessage);
+
+    // Cleanup: remove only the listener this component added
+    return () => {
+      socket.off("message", handleNewMessage);
+    };
+  }, [group.id, socket]); // Add group.id and socket to dependencies
+
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
+    if (!message.trim()) return; // Prevent sending empty messages
 
     const payload: MessageType = {
       id: uuidv4(),
       message: message,
       name: chatUser?.name ?? "Unknown",
       created_at: new Date().toISOString(),
-      group_id: group.id,
+      group_id: group.id, // Assuming this component is for group chats
+      // If used for direct chats, this logic needs adjustment for direct_chat_id
     };
-    socket.emit("message", payload);
+    socket.emit("message", payload); // Emit to the currently joined room
     setMessage("");
-    setMessages([...messages, payload]);
+    // Optimistically update messages
+    setMessages((prevMessages) => [...prevMessages, payload]);
+    scrollToBottom();
   };
 
   return (
@@ -57,16 +66,16 @@ export default function Chats({
       <div className="flex-1 overflow-y-auto flex flex-col-reverse">
         <div ref={messagesEndRef} />
         <div className="flex flex-col gap-2">
-          {messages.map((message) => (
+          {messages.map((msg) => (
             <div
-              key={message.id}
+              key={msg.id}
               className={`max-w-sm rounded-lg p-2 ${
-                message.name === chatUser?.name
+                msg.name === chatUser?.name
                   ? "bg-gradient-to-r from-blue-400 to-blue-600  text-white self-end"
                   : "bg-gradient-to-r from-gray-200 to-gray-300 text-black self-start"
               }`}
             >
-              {message.message}
+              {msg.message}
             </div>
           ))}
         </div>

@@ -7,6 +7,7 @@ import {
   joinGroupViaLink,
   addGroupMember,
   removeGroupMember,
+  deleteGroup,
 } from "../controllers/group.controller.js";
 import {
   createDirectChat,
@@ -41,6 +42,7 @@ router.delete(
   removeGroupMember
 );
 router.get("/groups/join/:shareLink", AuthMiddleware, joinGroupViaLink);
+router.delete("/groups/:groupId", AuthMiddleware, deleteGroup);
 
 // Direct chat routes
 router.post("/direct-chats", AuthMiddleware, createDirectChat);

@@ -324,3 +324,45 @@ export const removeGroupMember = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
+// Delete a group
+export const deleteGroup = async (req: Request, res: Response) => {
+  try {
+    const { groupId } = req.params;
+    const userId = req.user.id;
+
+    // Check if the current user is the owner of the group
+    const groupOwner = await prisma.groupUsers.findFirst({
+      where: {
+        group_id: groupId,
+        user_id: userId,
+        is_owner: true,
+      },
+    });
+
+    if (!groupOwner) {
+      return res
+        .status(403)
+        .json({ message: "Only the group owner can delete the group" });
+    }
+
+    // Delete all group users associated with the group
+    await prisma.groupUsers.deleteMany({
+      where: {
+        group_id: groupId,
+      },
+    });
+
+    // Delete the group
+    await prisma.chatGroup.delete({
+      where: {
+        id: groupId,
+      },
+    });
+
+    return res.status(200).json({ message: "Group deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting group:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};

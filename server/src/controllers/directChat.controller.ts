@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import prisma from "../config/db.config.js";
 import { v4 as uuidv4 } from "uuid";
+import { RedisService } from "../services/redis.service.js";
 
 // Create or get a direct chat between users
 export const createDirectChat = async (req: Request, res: Response) => {
@@ -66,10 +67,7 @@ export const getUserDirectChats = async (req: Request, res: Response) => {
     // Get all direct chats where user is either sender or receiver
     const directChats = await prisma.directChat.findMany({
       where: {
-        OR: [
-          { sender_id: userId },
-          { receiver_id: userId },
-        ],
+        OR: [{ sender_id: userId }, { receiver_id: userId }],
       },
       include: {
         sender: {
@@ -92,19 +90,26 @@ export const getUserDirectChats = async (req: Request, res: Response) => {
     });
 
     // Format the response to show the other user in each chat
-    const formattedChats = directChats.map(chat => {
-      const otherUser = chat.sender_id === userId ? chat.receiver : chat.sender;
-      return {
-        id: chat.id,
-        otherUser: {
-          id: otherUser.id,
-          name: otherUser.name,
-          email: otherUser.email,
-          image: otherUser.image,
-        },
-        created_at: chat.created_at,
-      };
-    });
+    const formattedChats = await Promise.all(
+      directChats.map(async (chat) => {
+        const otherUser =
+          chat.sender_id === userId ? chat.receiver : chat.sender;
+        const isOnline = await RedisService.isUserOnline(
+          otherUser.id.toString()
+        );
+        return {
+          id: chat.id,
+          otherUser: {
+            id: otherUser.id,
+            name: otherUser.name,
+            email: otherUser.email,
+            image: otherUser.image,
+            isOnline,
+          },
+          created_at: chat.created_at,
+        };
+      })
+    );
 
     return res.status(200).json({
       directChats: formattedChats,
@@ -145,4 +150,4 @@ export const getDirectChatMessages = async (req: Request, res: Response) => {
     console.error("Error fetching direct chat messages:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
-}; 
+};
