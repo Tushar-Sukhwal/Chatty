@@ -73,41 +73,44 @@ export default function ChatMembers({
   };
 
   return (
-    <div className="w-64 border-l border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-y-auto">
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-        <h3 className="font-semibold">Members ({members.length})</h3>
+    <div className="w-56 md:w-64 border-l border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-y-auto">
+      <div className="p-3 md:p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+        <h3 className="font-semibold text-sm md:text-base">
+          Members ({members.length})
+        </h3>
         {isOwner && (
           <Button
             variant="ghost"
-            size="icon"
+            size="sm"
+            className="h-8 w-8"
             onClick={() => setAddMemberDialogOpen(true)}
           >
-            <UserPlus size={18} />
+            <UserPlus size={16} />
           </Button>
         )}
       </div>
 
-      <div className="p-2">
+      <div className="p-1 md:p-2">
         {members.map((member) => (
           <div
             key={member.id}
-            className="flex items-center justify-between p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="flex items-center justify-between p-1.5 md:p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
           >
-            <div className="flex items-center">
-              <Avatar className="h-8 w-8 mr-2">
+            <div className="flex items-center overflow-hidden">
+              <Avatar className="h-6 w-6 md:h-8 md:w-8 mr-1 md:mr-2">
                 <AvatarImage src={member.user?.image || ""} />
                 <AvatarFallback>
                   {member.user?.name?.charAt(0) || "U"}
                 </AvatarFallback>
               </Avatar>
-              <div>
-                <p className="text-sm font-medium flex items-center">
+              <div className="min-w-0">
+                <p className="text-xs md:text-sm font-medium flex items-center truncate">
                   {member.user?.name}
                   {member.user?.isOnline && (
-                    <span className="ml-2 h-2 w-2 rounded-full bg-green-500"></span>
+                    <span className="ml-1 h-1.5 w-1.5 md:h-2 md:w-2 rounded-full bg-green-500 flex-shrink-0"></span>
                   )}
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-[10px] md:text-xs text-gray-500 truncate">
                   {member.is_owner ? "Owner" : "Member"}
                 </p>
               </div>
@@ -117,10 +120,10 @@ export default function ChatMembers({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7"
+                className="h-6 w-6 md:h-7 md:w-7"
                 onClick={() => handleRemoveMember(member.id)}
               >
-                <UserMinus size={14} className="text-red-500" />
+                <UserMinus size={12} className="md:size-14 text-red-500" />
               </Button>
             )}
           </div>

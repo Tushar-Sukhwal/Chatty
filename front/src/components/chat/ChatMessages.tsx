@@ -52,7 +52,7 @@ export default function ChatMessages({
   }
 
   return (
-    <div className="flex-1 p-4 overflow-y-auto bg-gray-50 dark:bg-gray-900">
+    <div className="flex-1 p-2 md:p-4 overflow-y-auto bg-gray-50 dark:bg-gray-900">
       {(messages || []).length === 0 ? (
         <div className="flex items-center justify-center h-full">
           <p className="text-gray-500">
@@ -60,7 +60,7 @@ export default function ChatMessages({
           </p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-2 md:space-y-4">
           {(messages || []).map((message) => {
             const isCurrentUser =
               currentUser && message.name === currentUser.name;
@@ -72,9 +72,15 @@ export default function ChatMessages({
                   isCurrentUser ? "justify-end" : "justify-start"
                 }`}
               >
-                <div className="flex max-w-[80%]">
+                <div className="flex max-w-[90%] md:max-w-[80%]">
                   {!isCurrentUser && (
-                    <Avatar className="h-8 w-8 mr-2 mt-1">
+                    <Avatar className="h-7 w-7 md:h-8 md:w-8 mr-2 mt-1 flex-shrink-0">
+                      <AvatarImage
+                        src={
+                          allUsersInChat?.find((u) => u.name === message.name)
+                            ?.image || ""
+                        }
+                      />
                       <AvatarFallback>{message.name.charAt(0)}</AvatarFallback>
                     </Avatar>
                   )}
@@ -87,15 +93,17 @@ export default function ChatMessages({
                     )}
 
                     <div
-                      className={`rounded-lg p-3 ${
+                      className={`rounded-lg p-2 md:p-3 ${
                         isCurrentUser
                           ? "bg-blue-600 text-white"
                           : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
                       }`}
                     >
-                      <p className="break-words">{message.message}</p>
+                      <p className="break-words text-sm md:text-base">
+                        {message.message}
+                      </p>
                       <p
-                        className={`text-xs mt-1 ${
+                        className={`text-[10px] md:text-xs mt-1 ${
                           isCurrentUser ? "text-blue-200" : "text-gray-500"
                         }`}
                       >
@@ -111,20 +119,20 @@ export default function ChatMessages({
           {/* Typing indicator */}
           {typingIndicatorText && (
             <div className="flex items-center">
-              <div className="bg-gray-200 dark:bg-gray-700 rounded-lg py-2 px-4 text-sm text-gray-600 dark:text-gray-300">
+              <div className="bg-gray-200 dark:bg-gray-700 rounded-lg py-1.5 md:py-2 px-3 md:px-4 text-xs md:text-sm text-gray-600 dark:text-gray-300">
                 <div className="flex items-center">
                   <span className="mr-2">{typingIndicatorText}</span>
                   <span className="flex space-x-1">
                     <span
-                      className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"
+                      className="w-1.5 h-1.5 md:w-2 md:h-2 bg-gray-500 rounded-full animate-bounce"
                       style={{ animationDelay: "0ms" }}
                     ></span>
                     <span
-                      className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"
+                      className="w-1.5 h-1.5 md:w-2 md:h-2 bg-gray-500 rounded-full animate-bounce"
                       style={{ animationDelay: "300ms" }}
                     ></span>
                     <span
-                      className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"
+                      className="w-1.5 h-1.5 md:w-2 md:h-2 bg-gray-500 rounded-full animate-bounce"
                       style={{ animationDelay: "600ms" }}
                     ></span>
                   </span>

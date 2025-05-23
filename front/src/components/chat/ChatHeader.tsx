@@ -10,6 +10,7 @@ import {
   Copy,
   Link as LinkIcon,
   Trash2,
+  Share2,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -62,41 +63,43 @@ export default function ChatHeader({
     chatType === "direct" ? (chat as DirectChatType).otherUser : null;
 
   return (
-    <header className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 flex items-center justify-between">
-      <div className="flex items-center">
+    <header className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-2 md:p-4 flex items-center justify-between">
+      <div className="flex items-center overflow-hidden">
         {chatType === "direct" ? (
           <>
-            <Avatar className="h-10 w-10 mr-3">
+            <Avatar className="h-8 w-8 md:h-10 md:w-10 mr-2 md:mr-3 flex-shrink-0">
               <AvatarImage src={otherUser?.image || ""} />
               <AvatarFallback>
                 {otherUser?.name.charAt(0) || "U"}
               </AvatarFallback>
             </Avatar>
-            <div>
-              <h2 className="font-semibold text-lg flex items-center">
+            <div className="min-w-0">
+              <h2 className="font-semibold text-base md:text-lg flex items-center truncate">
                 {otherUser?.name}
                 {otherUser?.isOnline && (
-                  <span className="ml-2 h-2 w-2 rounded-full bg-green-500"></span>
+                  <span className="ml-1 md:ml-2 h-1.5 w-1.5 md:h-2 md:w-2 rounded-full bg-green-500 flex-shrink-0"></span>
                 )}
               </h2>
-              <p className="text-sm text-gray-500">{otherUser?.email}</p>
+              <p className="text-xs md:text-sm text-gray-500 truncate">
+                {otherUser?.email}
+              </p>
             </div>
           </>
         ) : (
           <>
-            <div className="bg-gradient-to-br from-blue-500 to-purple-600 h-10 w-10 rounded-md flex items-center justify-center text-white mr-3">
-              <Users size={20} />
+            <div className="bg-gradient-to-br from-blue-500 to-purple-600 h-8 w-8 md:h-10 md:w-10 rounded-md flex items-center justify-center text-white mr-2 md:mr-3 flex-shrink-0">
+              <Users size={16} className="md:size-5" />
             </div>
-            <div>
-              <h2 className="font-semibold text-lg flex items-center">
+            <div className="min-w-0">
+              <h2 className="font-semibold text-base md:text-lg flex items-center truncate">
                 {(chat as GroupChatType).title}
                 {(chat as GroupChatType).is_owner && (
-                  <span className="ml-2 text-xs bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded text-gray-600 dark:text-gray-300">
+                  <span className="ml-1 md:ml-2 text-[10px] md:text-xs bg-gray-200 dark:bg-gray-700 px-1 md:px-2 py-0.5 rounded text-gray-600 dark:text-gray-300 flex-shrink-0">
                     Owner
                   </span>
                 )}
               </h2>
-              <p className="text-sm text-gray-500">
+              <p className="text-xs md:text-sm text-gray-500 truncate">
                 Created{" "}
                 {new Date(
                   (chat as GroupChatType).created_at
@@ -107,22 +110,27 @@ export default function ChatHeader({
         )}
       </div>
 
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-1 md:space-x-2 flex-shrink-0">
         {/* Only show share button for group chats */}
         {chatType === "group" && (
           <Button
             variant="ghost"
             size="icon"
+            className="h-8 w-8 md:h-10 md:w-10"
             onClick={() => setShareDialogOpen(true)}
           >
-            <Share size={20} />
+            <Share2 size={16} className="md:size-5" />
           </Button>
         )}
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <MoreVertical size={20} />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 md:h-10 md:w-10"
+            >
+              <MoreVertical size={16} className="md:size-5" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
@@ -152,7 +160,7 @@ export default function ChatHeader({
       {/* Share Dialog */}
       {chatType === "group" && (
         <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
-          <DialogContent>
+          <DialogContent className="max-w-sm md:max-w-md">
             <DialogHeader>
               <DialogTitle>Share Group</DialogTitle>
               <DialogDescription>
@@ -161,11 +169,16 @@ export default function ChatHeader({
               </DialogDescription>
             </DialogHeader>
             <div className="flex items-center mt-4 space-x-2">
-              <div className="flex-1 p-3 bg-gray-100 dark:bg-gray-800 rounded-md overflow-hidden text-sm">
+              <div className="flex-1 p-2 md:p-3 bg-gray-100 dark:bg-gray-800 rounded-md overflow-hidden text-xs md:text-sm break-all">
                 {shareLink}
               </div>
-              <Button onClick={copyShareLink} size="icon" variant="outline">
-                <Copy size={18} />
+              <Button
+                onClick={copyShareLink}
+                size="icon"
+                variant="outline"
+                className="h-8 w-8 md:h-10 md:w-10"
+              >
+                <Copy size={16} className="md:size-5" />
               </Button>
             </div>
             <div className="mt-4">

@@ -99,14 +99,14 @@ export default function ChatPage({ params }: { params: { id: string } }) {
   }
 
   return (
-    <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
+    <div className="flex h-screen bg-gray-100 dark:bg-gray-900 overflow-hidden">
       {/* Sidebar */}
       <Sidebar />
 
       {/* Main Content */}
       <main
         className={`flex-1 transition-all duration-300 ${
-          sidebarOpen ? "ml-64" : "ml-20"
+          sidebarOpen ? "md:ml-64" : "md:ml-20"
         }`}
       >
         <div className="h-full flex flex-col">
@@ -130,15 +130,17 @@ export default function ChatPage({ params }: { params: { id: string } }) {
 
             {/* Only show members panel for group chats */}
             {chatType === "group" && (
-              <ChatMembers
-                members={chatMembers}
-                groupId={activeChatId}
-                isOwner={
-                  chatType === "group" && "is_owner" in activeChat
-                    ? Boolean(activeChat.is_owner)
-                    : false
-                }
-              />
+              <div className="hidden md:block">
+                <ChatMembers
+                  members={chatMembers}
+                  groupId={activeChatId}
+                  isOwner={
+                    chatType === "group" && "is_owner" in activeChat
+                      ? Boolean(activeChat.is_owner)
+                      : false
+                  }
+                />
+              </div>
             )}
           </div>
         </div>

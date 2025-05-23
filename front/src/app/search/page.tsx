@@ -45,10 +45,8 @@ export default function SearchPage() {
   const handleStartChat = async (userId: number) => {
     setIsCreatingChat(userId);
     try {
-      const chat = await addDirectChat(userId);
-      if (chat) {
-        router.push(`/chat/${chat.id}?type=direct`);
-      }
+      await addDirectChat(userId);
+      router.push(`/chat/${userId}?type=direct`);
     } catch (error) {
       console.error("Error creating chat:", error);
       setIsCreatingChat(null);
@@ -64,19 +62,19 @@ export default function SearchPage() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
+    <div className="flex h-screen bg-gray-100 dark:bg-gray-900 overflow-hidden">
       {/* Sidebar */}
       <Sidebar />
 
       {/* Main Content */}
       <main
-        className={`flex-1 transition-all duration-300 ${
-          sidebarOpen ? "ml-64" : "ml-20"
+        className={`flex-1 transition-all duration-300 overflow-y-auto ${
+          sidebarOpen ? "md:ml-64" : "md:ml-20"
         }`}
       >
-        <div className="p-6">
-          <header className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+        <div className="p-4 md:p-6">
+          <header className="mb-6 md:mb-8">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
               Find Users
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-2">
@@ -84,8 +82,8 @@ export default function SearchPage() {
             </p>
           </header>
 
-          <div className="max-w-2xl">
-            <div className="flex items-center space-x-2 mb-8">
+          <div className="w-full md:max-w-2xl">
+            <div className="flex flex-col md:flex-row md:items-center md:space-x-2 space-y-2 md:space-y-0 mb-6 md:mb-8">
               <Input
                 placeholder="Search by email..."
                 value={searchTerm}
@@ -93,7 +91,11 @@ export default function SearchPage() {
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                 className="flex-1"
               />
-              <Button onClick={handleSearch} disabled={isSearching}>
+              <Button
+                onClick={handleSearch}
+                disabled={isSearching}
+                className="w-full md:w-auto"
+              >
                 {isSearching ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : (
