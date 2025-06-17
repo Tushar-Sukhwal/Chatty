@@ -4,7 +4,9 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
+import connectDB from "./config/db.config";
 /* ROUTE IMPORTS */
+import authRoutes from "./routes/auth.routes";
 
 /* CONFIGURATION */
 dotenv.config();
@@ -20,6 +22,10 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.get("/", (req, res) => {
   res.send("This is Home route ");
 });
+
+app.use("/api/auth", authRoutes);
+
+connectDB();
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

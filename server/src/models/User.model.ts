@@ -2,13 +2,12 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 interface IUserDocument extends Document {
   email: string;
-  username: string;
+  userName: string;
   password: string;
   avatar: string;
   isOnline: boolean;
   lastSeen: Date;
   lastSocketConnectedAt: Date;
-
 }
 
 const UserSchema = new Schema<IUserDocument>({
@@ -19,15 +18,11 @@ const UserSchema = new Schema<IUserDocument>({
     lowercase: true,
     trim: true,
   },
-  username: {
+  userName: {
     type: String,
     required: true,
     unique: true,
     trim: true,
-  },
-  password: {
-    type: String,
-    minlength: 6,
   },
   avatar: {
     type: String,

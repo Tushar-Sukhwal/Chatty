@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
-import User from "@/models/User.model";
+import User from "../models/User.model";
 import jwt from "jsonwebtoken";
-import generateUserId from "@/utils/generateUserId";
+import generateUserId from "../utils/generateUserId";
+import { emailSchema } from "../validation/auth.validation";
 
 /**
  * @description AuthController is a class that contains the methods for the auth routes
@@ -19,12 +20,15 @@ export class AuthController {
    */
   static async signup(req: Request, res: Response): Promise<void> {
     try {
-      const { email } = req.body;
+      const emailResult = emailSchema.safeParse(req.user?.email);
 
-      if (!email) {
-        res.status(400).json({ message: "Email is required" });
+      if (!emailResult.success) {
+        res.status(400).json({ message: "Invalid email address" });
         return;
       }
+
+      const email = emailResult.data;
+      console.log(email);
 
       const existingUser = await User.findOne({ email });
 
@@ -42,6 +46,7 @@ export class AuthController {
       res.status(201).json({ user, token });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
+      console.log(error);
     }
   }
 
@@ -53,7 +58,13 @@ export class AuthController {
    */
   static async login(req: Request, res: Response): Promise<void> {
     try {
-      const { email } = req.body;
+      const emailResult = emailSchema.safeParse(req.user?.email);
+      if (!emailResult.success) {
+        res.status(400).json({ message: "Invalid email address" });
+        return;
+      }
+
+      const email = emailResult.data;
       const user = await User.findOne({ email });
       if (!user) {
         res.status(400).json({ message: "User not found" });

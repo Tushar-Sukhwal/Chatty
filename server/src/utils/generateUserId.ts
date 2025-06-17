@@ -1,4 +1,4 @@
-import User from "@/models/User.model";
+import User from "../models/User.model";
 
 const userIdHelper = (email: string): string => {
   // Remove everything after @ and replace special characters
