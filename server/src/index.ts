@@ -7,6 +7,8 @@ import morgan from "morgan";
 import connectDB from "./config/db.config";
 /* ROUTE IMPORTS */
 import authRoutes from "./routes/auth.routes";
+import http from "http";
+import { initializeSocket } from "./services/socket.service";
 
 /* CONFIGURATION */
 dotenv.config();
@@ -28,6 +30,10 @@ app.use("/api/auth", authRoutes);
 connectDB();
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+
+const server = http.createServer(app);
+initializeSocket(server);
+
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
