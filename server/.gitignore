@@ -1,0 +1,5 @@
+node_modules
+.env
+dist
+config/chatty-5d50d-firebase-adminsdk-fbsvc-3540b8ad04.json
+firebase-service.json
