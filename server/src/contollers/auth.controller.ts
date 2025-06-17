@@ -28,7 +28,7 @@ export class AuthController {
       }
 
       const email = emailResult.data;
-      console.log(email);
+      const avatar = req.user?.picture || "";
 
       const existingUser = await User.findOne({ email });
 
@@ -39,9 +39,12 @@ export class AuthController {
 
       const userName = await generateUserId(email);
 
-      const user = await User.create({ email, userName });
+      const user = await User.create({ email, userName, avatar });
 
-      const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET!);
+      const token = jwt.sign(
+        { userId: user._id, userName: user.userName },
+        process.env.JWT_SECRET!
+      );
 
       res.status(201).json({ user, token });
     } catch (error) {
@@ -65,12 +68,17 @@ export class AuthController {
       }
 
       const email = emailResult.data;
+
       const user = await User.findOne({ email });
       if (!user) {
         res.status(400).json({ message: "User not found" });
         return;
       }
-      const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET!);
+
+      const token = jwt.sign(
+        { userId: user._id, userName: user.userName },
+        process.env.JWT_SECRET!
+      );
       res.status(200).json({ user, token });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
