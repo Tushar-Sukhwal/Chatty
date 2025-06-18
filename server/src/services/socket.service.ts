@@ -5,7 +5,7 @@ import { RedisService } from "./redis.service";
 import User from "../models/User.model";
 import Chat from "../models/Chat.model";
 import Message from "../models/Message.model";
-import { IMessageDocument } from "../types/models";
+import { IChatDocument, IMessageDocument } from "../types/models";
 import { KafkaService } from "./kafka.service";
 import { v4 as uuidv4 } from "uuid";
 
@@ -139,7 +139,61 @@ const handleMessageEdit = async (
   callback("Message edited successfully");
 };
 
+const handleMessageDelete = async (
+  socket: Socket,
+  data: IMessageDocument,
+  callback: (messageId: string) => void
+) => {
+  //TODO: add delete message to kafka
+  //TODO: notify all participants except the sender
+  const chat = await Chat.findById(data.chatId);
+  chat?.participants.forEach(async (participant) => {
+    if (participant.user.toString() !== data.senderId.toString()) {
+      const participantSocketId = await RedisService.getSocketIdFromMongoId(
+        participant.user
+      );
+      if (participantSocketId) {
+        socket.to(participantSocketId).emit("updateDeleteMessage", data);
+      }
+    }
+  });
+};
 
+const handleAddChat = async (
+  socket: Socket,
+  data: IChatDocument,
+  callback: (messageId: string) => void
+) => {
+  //TODO: notify all participants except the sender
+  if (data.type === "direct") {
+    //check if the chat already exists
+    const chat = await Chat.findOne({
+      type: "direct",
+      participants: {
+        $all: [data.participants[0].user, data.participants[1].user],
+      },
+    });
+    // for each user update the chat in db through kafka
+    // TODO KafkaService.publishMessage("ADD_CHAT", data);
+
+    if (chat) {
+      callback("Chat already exists");
+      return;
+    }
+    //enter into db
+    const newChat = await Chat.create(data);
+    //notify all participants except the sender
+    newChat.participants.forEach(async (participant) => {
+      const participantSocketId = await RedisService.getSocketIdFromMongoId(
+        participant.user
+      );
+      if (participantSocketId) {
+        socket.to(participantSocketId).emit("updateAddChat", newChat);
+      }
+    });
+    callback(JSON.stringify(newChat));
+  }
+};
 
 export const initializeSocket = (server: Server) => {
   io = new SocketServer(server, {
@@ -154,13 +208,20 @@ export const initializeSocket = (server: Server) => {
   io.on("connection", (socket: Socket) => {
     handleConnection(socket);
 
-    // respond with the _id as uuid4.
     socket.on("sendMessage", async (data, callback) => {
       handleSendMessage(socket, data, callback);
     });
 
     socket.on("editMessage", async (data, callback) => {
       handleMessageEdit(socket, data, callback);
+    });
+
+    socket.on("deleteMessage", async (data, callback) => {
+      handleMessageDelete(socket, data, callback);
+    });
+
+    socket.on("addChat", async (data, callback) => {
+      handleAddChat(socket, data, callback);
     });
 
     socket.on("disconnect", async () => {

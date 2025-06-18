@@ -1,11 +1,17 @@
-import React from 'react'
+import { useAppSelector } from "@/app/redux";
+import React from "react";
 
-type Props = {}
+type Props = {};
 
 const Sidebar = (props: Props) => {
+  const chatList = useAppSelector((state) => state.global.chatList);
   return (
-    <div>Sidebar</div>
-  )
-}
+    <div>
+      {chatList.map((chat) => (
+        <div key={chat._id}>{chat.name}</div>
+      ))}
+    </div>
+  );
+};
 
-export default Sidebar
+export default Sidebar;

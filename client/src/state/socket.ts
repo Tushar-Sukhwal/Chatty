@@ -1,5 +1,11 @@
 import { io, Socket } from "socket.io-client";
-import { addMessage, editMessage, updateMessageStatus } from "./index";
+import {
+  addMessage,
+  addChat,
+  deleteMessage,
+  editMessage,
+  updateMessageStatus,
+} from "./index";
 
 class SocketService {
   private static instance: SocketService;
@@ -66,7 +72,19 @@ class SocketService {
         callback(true);
       });
 
-      
+      this.socket.on("updateDeleteMessage", (data, callback) => {
+        //update the message in state
+        deleteMessage(data);
+        //callback with the delivery status
+        callback(true);
+      });
+
+      this.socket.on("updateAddChat", (data, callback) => {
+        //update the chat in state
+        addChat(data);
+        //callback with the delivery status
+        callback(true);
+      });
     }
     return this.socket;
   }
@@ -131,6 +149,29 @@ class SocketService {
       if (ack != "Message not allowed to edit") {
         //update the message in state
         editMessage(data);
+      }
+    });
+  }
+
+  deleteMessage(data: { chatId: string; messageId: string; senderId: string }) {
+    if (!this.socket) return;
+    this.socket.emit("deleteMessage", data, (ack: string) => {
+      //TODO: trigger toast notification
+      if (ack != "Message not allowed to delete") {
+        //update the message in state
+        deleteMessage(data);
+      }
+    });
+  }
+
+  addChat(data: { chatId: string; senderId: string }) {
+    if (!this.socket) return;
+    this.socket.emit("addChat", data, (ack: string) => {
+      //TODO: trigger toast notification
+      if (ack != "Chat already exists") {
+        //update the chat in state
+        const newChat = JSON.parse(ack);
+        addChat(newChat);
       }
     });
   }

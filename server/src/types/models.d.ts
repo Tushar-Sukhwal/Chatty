@@ -41,4 +41,5 @@ export declare interface IUserDocument extends Document {
   lastSocketConnectedAt: Date;
   chats: Schema.Types.ObjectId[];
   friends: Schema.Types.ObjectId[];
+  
 }
