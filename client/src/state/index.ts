@@ -2,16 +2,19 @@ import { Message } from "@/types/types";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { User } from "firebase/auth";
 
-
-
 export interface initialStateTypes {
-  user : User | null;
-  messages: Message[];
+  user: User | null;
+  chats: Record<
+    string,
+    {
+      messages: Message[];
+    }
+  >;
 }
 
 const initialState: initialStateTypes = {
   user: null,
-  messages: [],
+  chats: {},
 };
 
 export const globalSlice = createSlice({
@@ -22,19 +25,36 @@ export const globalSlice = createSlice({
       state.user = action.payload;
     },
     addMessage: (state, action: PayloadAction<Message>) => {
-      state.messages.push(action.payload);
+      state.chats[action.payload.chatId].messages.push(action.payload);
     },
-    updateMessage: (state, action: PayloadAction<Message>) => {
-      const index = state.messages.findIndex(message => message._id === action.payload._id);
+    editMessage: (state, action: PayloadAction<Message>) => {
+      const index = state.chats[action.payload.chatId].messages.findIndex(
+        (message) => message.messageId === action.payload.messageId
+      );
       if (index !== -1) {
-        state.messages[index] = action.payload;
+        state.chats[action.payload.chatId].messages[index] = action.payload;
       }
     },
-    deleteMessage: (state, action: PayloadAction<string>) => {
-      state.messages = state.messages.filter(message => message._id !== action.payload);
+    // update the message status from sending to delivered.
+    updateMessageStatus: (
+      state,
+      action: PayloadAction<{
+        chatId: string;
+        messageId: string;
+        status: string;
+      }>
+    ) => {
+      const index = state.chats[action.payload.chatId].messages.findIndex(
+        (message) => message.messageId === action.payload.messageId
+      );
+      if (index !== -1) {
+        state.chats[action.payload.chatId].messages[index].status =
+          action.payload.status;
+      }
     },
   },
 });
 
-export const { setUser, addMessage, updateMessage, deleteMessage } = globalSlice.actions;
+export const { setUser, addMessage, editMessage, updateMessageStatus } =
+  globalSlice.actions;
 export default globalSlice.reducer;

@@ -1,5 +1,5 @@
 import { io, Socket } from "socket.io-client";
-import { addMessage } from "./index";
+import { addMessage, editMessage, updateMessageStatus } from "./index";
 
 class SocketService {
   private static instance: SocketService;
@@ -42,6 +42,31 @@ class SocketService {
       this.socket.on("error", (error) => {
         console.log("Socket error", error);
       });
+
+      this.socket.on("delivered", (data) => {
+        //update the message status to delivered
+        updateMessageStatus({
+          chatId: data.chatId,
+          messageId: data.messageId,
+          status: "delivered",
+        });
+      });
+
+      this.socket.on("newMessage", (data, callback) => {
+        //add the message to state
+        addMessage(data);
+        //callback with the delivery status
+        callback(true);
+      });
+
+      this.socket.on("updateEditMessage", (data, callback) => {
+        //update the message in state
+        editMessage(data);
+        //callback with the delivery status
+        callback(true);
+      });
+
+      
     }
     return this.socket;
   }
@@ -63,20 +88,18 @@ class SocketService {
    * then merges the _id into the message and adds it to state.
    * @param data - Message data (without _id)
    */
-  sendMessageWithAck(
-    data: {
-      chatId: string;
-      senderId: string;
-      content: string;
-      type: string;
-      status: string; // sending, sent, delivered, read, edited, deleted
-      replyTo: string;
-      sentAt: Date;
-      deliveredAt?: Date;
-      readAt: Date;
-      editedAt: Date;
-    },
-  ) {
+  sendMessageWithAck(data: {
+    chatId: string;
+    senderId: string;
+    content: string;
+    type: string;
+    status: string; // sending, sent, delivered, read, edited, deleted
+    replyTo: string;
+    sentAt: Date;
+    deliveredAt?: Date;
+    readAt: Date;
+    editedAt: Date;
+  }) {
     if (!this.socket) return;
     // Send message to server without _id
     this.socket.emit("sendMessage", data, (serverMessage: any) => {
@@ -85,6 +108,30 @@ class SocketService {
       const updatedMessage = { ...data, messageId: serverMessage.messageId };
       // Store the updated message in state
       addMessage(updatedMessage);
+    });
+  }
+
+  editMessage(data: {
+    chatId: string;
+    messageId: string;
+    senderId: string;
+    content: string;
+    type: string;
+    status: string; // sending, sent, delivered, read, edited, deleted
+    replyTo: string;
+    sentAt: Date;
+    deliveredAt?: Date;
+    readAt: Date;
+    editedAt: Date;
+  }) {
+    if (!this.socket) return;
+    this.socket.emit("editMessage", data, (ack: string) => {
+      //TODO: trigger toast notification
+
+      if (ack != "Message not allowed to edit") {
+        //update the message in state
+        editMessage(data);
+      }
     });
   }
 }

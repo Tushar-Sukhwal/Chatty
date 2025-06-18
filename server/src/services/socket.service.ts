@@ -4,6 +4,7 @@ import { socketAuthMiddleware } from "../middleware/SocketAuth.middleware";
 import { RedisService } from "./redis.service";
 import User from "../models/User.model";
 import Chat from "../models/Chat.model";
+import Message from "../models/Message.model";
 import { IMessageDocument } from "../types/models";
 import { KafkaService } from "./kafka.service";
 import { v4 as uuidv4 } from "uuid";
@@ -39,30 +40,103 @@ const handleDisconnect = (socket: Socket) => {
   RedisService.socketDisconnectProcess(socket.id, mongoId!);
 };
 
+/**
+ * Handles the "sendMessage" socket event.
+ *
+ * This function is responsible for processing a new message sent by a user.
+ * It performs the following steps:
+ * 1. Generates a unique UUIDv4 for the message and assigns it to `data.messageId`.
+ * 2. Publishes the message to Kafka with the topic "NEW_MESSAGE" for further processing.
+ * 3. Responds to the sender with the generated `messageId` via the provided callback.
+ * 4. Retrieves the chat by `chatId` and iterates over all participants except the sender.
+ * 5. For each participant (excluding the sender), retrieves their socket ID from Redis.
+ * 6. If the participant is online (socket ID exists), emits a "newMessage" event to their socket with the message data.
+ * 7. If the message is delivered and the chat type is "direct", emits a "delivered" event back to the sender with the `messageId`.
+ *
+ * @param {Socket} socket - The socket instance of the sender.
+ * @param {IMessageDocument} data - The message data to be sent.
+ * @param {(messageId: string) => void} callback - Callback to respond to the sender with the generated message ID.
+ */
 const handleSendMessage = async (
   socket: Socket,
   data: IMessageDocument,
   callback: (messageId: string) => void
 ) => {
-  //generate uuid4 for messageId
+  // Generate uuid4 for messageId
   data.messageId = uuidv4();
-  //push message to kafka
+
+  // Push message to Kafka
   await KafkaService.publishMessage("NEW_MESSAGE", data);
-  //respond with the messageId
+
+  // Respond with the messageId
   callback(data.messageId);
 
   const chatId = data.chatId;
   const chat = await Chat.findById(chatId);
+
+  // Notify all participants except the sender
   chat?.participants.forEach(async (participant) => {
     if (participant.user.toString() !== data.senderId.toString()) {
       const participantSocketId = await RedisService.getSocketIdFromMongoId(
         participant.user
       );
       if (participantSocketId) {
-        socket.to(participantSocketId).emit("newMessage", data);
+        socket
+          .to(participantSocketId)
+          .emit("newMessage", data, (deliveryStatus: boolean) => {
+            // If delivered and chat is direct, notify sender
+            if (deliveryStatus && chat?.type === "direct") {
+              socket.emit("delivered", {
+                messageId: data.messageId,
+                chatId: chatId,
+              });
+            }
+          });
       }
     }
   });
+};
+
+const handleMessageEdit = async (
+  socket: Socket,
+  data: IMessageDocument,
+  callback: (messageId: string) => void
+) => {
+  const msgFromDb = await Message.findById(data.messageId);
+  if (!msgFromDb) {
+    callback("Message not found");
+    return;
+  }
+
+  //chatId, messageId, senderId, type, replyTo, sentAt, deliverdAt, readAt should be same
+  if (
+    msgFromDb.chatId !== data.chatId ||
+    msgFromDb.messageId !== data.messageId ||
+    msgFromDb.senderId !== data.senderId ||
+    msgFromDb.type !== data.type ||
+    msgFromDb.replyTo !== data.replyTo ||
+    msgFromDb.sentAt !== data.sentAt ||
+    msgFromDb.readAt !== data.readAt
+  ) {
+    callback("Message not allowed to edit");
+    return;
+  }
+  //kafka
+  await KafkaService.publishMessage("EDIT_MESSAGE", data); //TODO: add edit message to kafka
+
+  //notify all participants except the sender
+  const chat = await Chat.findById(data.chatId);
+  chat?.participants.forEach(async (participant) => {
+    if (participant.user.toString() !== data.senderId.toString()) {
+      const participantSocketId = await RedisService.getSocketIdFromMongoId(
+        participant.user
+      );
+      if (participantSocketId) {
+        socket.to(participantSocketId).emit("updateEditMessage", data);
+      }
+    }
+  });
+  callback("Message edited successfully");
 };
 
 
@@ -83,6 +157,10 @@ export const initializeSocket = (server: Server) => {
     // respond with the _id as uuid4.
     socket.on("sendMessage", async (data, callback) => {
       handleSendMessage(socket, data, callback);
+    });
+
+    socket.on("editMessage", async (data, callback) => {
+      handleMessageEdit(socket, data, callback);
     });
 
     socket.on("disconnect", async () => {
