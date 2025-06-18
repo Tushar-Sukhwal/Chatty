@@ -3,6 +3,11 @@ import { IMessageDocument } from "../types/models";
 
 const MessageSchema = new Schema<IMessageDocument>(
   {
+    messageId: {
+      type: String,
+      required: true,
+      unique: true,
+    }, //uuid4
     chatId: {
       type: Schema.Types.ObjectId,
       ref: "Chat",
@@ -44,9 +49,6 @@ const MessageSchema = new Schema<IMessageDocument>(
     sentAt: {
       type: Date,
       default: Date.now,
-    },
-    deliveredAt: {
-      type: Date,
     },
     readAt: {
       type: Date,

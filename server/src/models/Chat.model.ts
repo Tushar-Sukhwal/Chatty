@@ -33,7 +33,7 @@ const ChatSchema = new Schema<IChatDocument>(
         },
         lastSeen: {
           type: Date,
-          default: Date.now,
+          default: Date.now, //when the user last saw the chat
         },
       },
     ],
