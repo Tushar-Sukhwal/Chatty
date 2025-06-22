@@ -62,11 +62,15 @@ const handleSendMessage = async (
   data: IMessageDocument,
   callback: (messageId: string) => void
 ) => {
+  console.log("sendMessage", data);
   // Generate uuid4 for messageId
   data.messageId = uuidv4();
 
   // Push message to Kafka
-  await KafkaService.publishMessage("NEW_MESSAGE", data);
+  // await KafkaService.publishMessage("NEW_MESSAGE", data);
+
+  // Push message to db
+  const newMessage = await Message.create(data);
 
   // Respond with the messageId
   callback(data.messageId);

@@ -1,28 +1,37 @@
 import React from "react";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "../ui/button";
-import { Plus } from "lucide-react";
+import { Plus, UserPlus } from "lucide-react";
 import AddUserModal from "../userProfile/addUserModal";
 import CreateChatModal from "../createChat/createChatModal";
 
 type Props = {};
 
 const SidebarNav = (props: Props) => {
-  const handleAddGroup = () => {
-    // TODO handleAddGroup
-  };
-
   return (
-    <div className="absolute top-0 left-0 w-full h-full bg-white shadow-md">
-      <div className="flex items-center gap-2">
-        <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow">
-          <span className="text-blue-600 font-bold text-2xl">C</span>
+    <div className="h-16 bg-white border-b border-gray-200 px-4 flex items-center justify-between">
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+          <span className="text-white font-bold text-lg">C</span>
         </div>
-        <h1 className="text-2xl font-bold">Chatty</h1>
+        <h1 className="text-xl font-bold text-gray-900">Chatty</h1>
+      </div>
+
+      <div className="flex items-center gap-2">
         <Dialog>
-          <DialogTrigger>add friend</DialogTrigger>
+          <DialogTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-gray-600 hover:text-gray-900"
+            >
+              <UserPlus className="h-4 w-4 mr-1" />
+              Add Friend
+            </Button>
+          </DialogTrigger>
           <AddUserModal />
         </Dialog>
+
         <CreateChatModal />
       </div>
     </div>

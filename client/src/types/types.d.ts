@@ -20,9 +20,11 @@ export interface Chat {
 }
 
 export interface Message {
-  _id: string;
+  chatId: string;
+  messageId: string;
+  _id?: string;
   content: string;
-  sender: string;
-  receiver: string;
-  createdAt: Date;
+  senderId: string;
+  receiverId?: string;
+  createdAt?: Date;
 }

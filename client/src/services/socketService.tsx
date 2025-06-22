@@ -1,4 +1,6 @@
 // src/services/SocketSingleton.ts
+import { useChatStore } from "@/store/chatStore";
+import { Message } from "@/types/types";
 import { io, Socket } from "socket.io-client";
 
 class SocketSingleton {
@@ -63,7 +65,12 @@ class SocketSingleton {
       this.reconnectAttempts = 0;
     });
 
-
+    this.socket.on("newMessage", (message: Message) => {
+      useChatStore.setState({
+        messages: [...useChatStore.getState().messages, message],
+      });
+      console.log("New message received:", message);
+    });
   }
 
   public connect(): void {
@@ -76,6 +83,18 @@ class SocketSingleton {
     if (this.isConnected || this.socket.connected) {
       this.socket.disconnect();
     }
+  }
+
+  public sendMessage(messageData: {
+    content: string;
+    chatId: string;
+    senderId: string;
+  }) {
+    let ret: string | null = null;
+    this.socket.emit("sendMessage", messageData, (response: any) => {
+      ret = response;
+    });
+    return ret;
   }
 }
 
