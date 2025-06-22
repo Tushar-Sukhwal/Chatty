@@ -32,7 +32,7 @@ const SidebarNav = (props: Props) => {
           <AddUserModal />
         </Dialog>
 
-        <CreateChatModal />
+        {/* <CreateChatModal /> */}
       </div>
     </div>
   );
