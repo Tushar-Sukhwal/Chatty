@@ -9,6 +9,9 @@ import connectDB from "./config/db.config";
 import authRoutes from "./routes/auth.routes";
 import http from "http";
 import { initializeSocket } from "./services/socket.service";
+import chatRoutes from "./routes/chat.routes";
+import messageRoutes from "./routes/message.routes";
+import userRoutes from "./routes/user.routes";
 
 /* CONFIGURATION */
 dotenv.config();
@@ -26,6 +29,9 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/chat", chatRoutes);
+app.use("/api/message", messageRoutes);
+app.use("/api/user", userRoutes); 
 
 connectDB();
 

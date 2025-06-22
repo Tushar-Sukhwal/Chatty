@@ -1,15 +1,12 @@
-import { useAppSelector } from "@/app/redux";
 import React from "react";
+import SidebarNav from "./SidebarNav";
 
 type Props = {};
 
 const Sidebar = (props: Props) => {
-  const chatList = useAppSelector((state) => state.global.chatList);
   return (
-    <div>
-      {chatList.map((chat) => (
-        <div key={chat._id}>{chat.name}</div>
-      ))}
+    <div className="relative bg-gray-100 h-full w-[100%] border-r border-gray-200">
+      <SidebarNav />
     </div>
   );
 };

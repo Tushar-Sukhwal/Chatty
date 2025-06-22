@@ -1,10 +1,29 @@
 "use client";
 
-import React, { useState } from "react";
-import { ChatLayout } from "@/components/chat/ChatLayout";
+import { useUserStore } from "@/store/userStore";
+import { useAuth } from "@/hooks/useAuth";
+import Sidebar from "@/components/sidebar/Sidebar";
+import ChatArea from "@/components/chatArea/chatArea";
+import SocketSingleton from "@/services/socketService";
 
-const DashboardPage = () => {
-  return <ChatLayout />;
-};
+export default function DashboardPage() {
+  const { user, socketToken, firebaseToken } = useUserStore();
+  const { logout } = useAuth();
 
-export default DashboardPage;
+  const socket = SocketSingleton.getInstance();
+  socket.connect();
+
+  return (
+    <div className=" flex w-full h-screen">
+      {/* Sidebar - 30% width on desktop, full width on mobile */}
+      <div className="w-[30%]">
+        <Sidebar />
+      </div>
+
+      {/* Chat Area - 70% width on desktop, hidden on mobile when sidebar is shown */}
+      <div className="w-[70%]">
+        <ChatArea />
+      </div>
+    </div>
+  );
+}
