@@ -14,7 +14,7 @@ import { ArrowLeft } from "lucide-react";
 
 export default function DashboardPage() {
   const socket = SocketSingleton.getInstance();
-  const { activeChat } = useChatStore();
+  const { activeChat, activeChatName } = useChatStore();
   const [showMobileChat, setShowMobileChat] = useState(false);
 
   socket.connect();
@@ -39,27 +39,33 @@ export default function DashboardPage() {
   return (
     <div className="flex w-full h-screen overflow-hidden">
       {/* Mobile: Show sidebar or chat based on state */}
-      <div className="md:hidden w-full">
+      <div className="md:hidden w-full h-full flex flex-col">
         {!showMobileChat || !activeChat ? (
           <Sidebar />
         ) : (
-          <div className="flex flex-col h-full">
-            {/* Mobile Chat Header */}
-            <div className="h-14 bg-white border-b border-gray-200 flex items-center px-4">
+          <>
+            {/* Mobile Chat Header - Fixed height with proper spacing */}
+            <div className="flex-shrink-0 h-16 bg-white border-b border-gray-200 flex items-center px-4 min-h-[4rem]">
               <Button
                 variant="ghost"
-                size="icon"
+                size="sm"
                 onClick={() => setShowMobileChat(false)}
-                className="mr-3"
+                className="mr-3 flex-shrink-0 h-10 w-10 p-0"
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
-              <span className="font-medium">Back to Chats</span>
+              <div className="flex-1 min-w-0">
+                <span className="font-medium text-gray-900 truncate block">
+                  {activeChatName || "Chat"}
+                </span>
+              </div>
             </div>
-            <div className="flex-1">
-              <ChatArea />
+
+            {/* Chat Area - Takes remaining height */}
+            <div className="flex-1 min-h-0">
+              <ChatArea hideMobileNav={true} />
             </div>
-          </div>
+          </>
         )}
       </div>
 

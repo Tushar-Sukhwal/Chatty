@@ -20,20 +20,27 @@ const ChatAreaMessage = ({ message }: Props) => {
   };
 
   return (
-    <div className={cn("flex", isOwnMessage ? "justify-end" : "justify-start")}>
+    <div
+      className={cn(
+        "flex w-full",
+        isOwnMessage ? "justify-end" : "justify-start"
+      )}
+    >
       <div
         className={cn(
-          "max-w-xs lg:max-w-md px-4 py-2 rounded-lg",
+          "max-w-[85%] sm:max-w-xs lg:max-w-md px-3 py-2 rounded-lg break-words",
           isOwnMessage
-            ? "bg-blue-600 text-white rounded-br-none"
-            : "bg-gray-200 text-gray-900 rounded-bl-none"
+            ? "bg-blue-600 text-white rounded-br-none ml-auto"
+            : "bg-gray-200 text-gray-900 rounded-bl-none mr-auto"
         )}
         onContextMenu={(e) => {
           e.preventDefault();
           // Show context menu for edit/delete options
         }}
       >
-        <p className="text-sm">{message.content}</p>
+        <p className="text-sm leading-relaxed whitespace-pre-wrap">
+          {message.content}
+        </p>
         {message.createdAt && (
           <p
             className={cn(
