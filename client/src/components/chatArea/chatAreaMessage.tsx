@@ -1,5 +1,4 @@
 import React from "react";
-import ChatAreaMessageEditModal from "./chatAreaMessageEditModal";
 
 type Props = {};
 

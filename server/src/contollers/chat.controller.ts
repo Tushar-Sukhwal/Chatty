@@ -32,14 +32,59 @@ export class ChatController {
   }
 
   static async createChat(req: Request, res: Response) {
-    const { type, name, description, avatar, participants } = req.body;
+    const emails = req.body.emails;
+    const user = await User.findOne({ email: req.user?.email });
+    if (!user) {
+      res.status(404).json({ message: "User not found" });
+      return;
+    }
+    //check if the emails are valid
+    const validEmails = emails.every(
+      (email: string) => emailSchema.safeParse(email).success
+    );
+    if (!validEmails) {
+      res.status(400).json({ message: "Invalid email addresses" });
+      return;
+    }
+
+    //check if the emails are unique
+    const uniqueEmails = emails.filter(
+      (email: string, index: number, self: string[]) =>
+        self.indexOf(email) === index
+    );
+    if (uniqueEmails.length !== emails.length) {
+      res.status(400).json({ message: "Duplicate email addresses" });
+      return;
+    }
+
+    //check if the emails are friends
+    const friends = await User.find({ email: { $in: emails } });
+    if (friends.length !== emails.length) {
+      res.status(400).json({ message: "Some emails are not friends" });
+      return;
+    }
+
+    if (emails.length === 1) {
+      const chat = await Chat.create({
+        type: "direct",
+        participants: [{ user: user._id, lastSeen: new Date() }],
+      });
+      res.status(200).json({
+        message: "Direct chat created successfully",
+        data: chat,
+      });
+      return;
+    }
+
+    //create the chat
     const chat = await Chat.create({
-      type,
-      name,
-      description,
-      avatar,
-      participants,
+      type: "group",
+      participants: friends.map((friend) => ({ user: friend._id })),
     });
-    res.status(200).json({ message: "Chat created successfully", data: chat });
+    res.status(200).json({
+      message: "Group chat created successfully",
+      data: chat,
+    });
+    return;
   }
 }

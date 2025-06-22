@@ -21,12 +21,13 @@ interface UseAuthReturn {
   // Authentication methods
   loginWithEmail: (email: string, password: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
-  signupWithEmail: (email: string, password: string) => Promise<void>;
+  signupWithEmail: (
+    email: string,
+    password: string,
+    name: string
+  ) => Promise<void>;
   signupWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
-
-  // Chat methods
-  createChat: (userId: string) => Promise<Chat>;
 
   // Loading states
   emailLoginLoading: boolean;
@@ -90,29 +91,26 @@ export const useAuth = (): UseAuthReturn => {
     []
   );
 
-  // Chat API
-  const createChat = useCallback(
-    async (userId: string): Promise<Chat> => {
-      if (!firebaseToken) {
-        throw new Error("No authentication token available");
-      }
-
+  const authApiSignup = useCallback(
+    async (token: string, name: string): Promise<AuthResponse> => {
       const response = await api.post(
-        "/api/chats",
-        { userId },
+        "/api/auth/signup",
+        {
+          name,
+        },
         {
           headers: {
-            Authorization: `Bearer ${firebaseToken}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
       return response.data;
     },
-    [firebaseToken]
+    []
   );
 
   // Authentication success handler
-  const handleAuthSuccess = useCallback(
+  const handleLoginAuthSuccess = useCallback(
     async (firebaseUser: any) => {
       const token = await firebaseUser.getIdToken();
       const authResponse = await authApiLogin(token);
@@ -126,6 +124,20 @@ export const useAuth = (): UseAuthReturn => {
     [authApiLogin, setUser, setSocketToken, setFirebaseToken, router]
   );
 
+  const handleSignupAuthSuccess = useCallback(
+    async (firebaseUser: any, name: string) => {
+      const token = await firebaseUser.getIdToken();
+      const authResponse = await authApiSignup(token, name);
+
+      setUser(authResponse.user);
+      setSocketToken(authResponse.token);
+      setFirebaseToken(token);
+
+      router.push("/dashboard");
+    },
+    [authApiSignup, setUser, setSocketToken, setFirebaseToken, router]
+  );
+
   // Authentication methods
   const loginWithEmail = useCallback(
     async (email: string, password: string) => {
@@ -133,13 +145,13 @@ export const useAuth = (): UseAuthReturn => {
         const result = await signInWithEmailAndPassword(email, password);
 
         if (result?.user) {
-          await handleAuthSuccess(result.user);
+          await handleLoginAuthSuccess(result.user);
         }
       } catch (error: any) {
         throw error;
       }
     },
-    [signInWithEmailAndPassword, handleAuthSuccess]
+    [signInWithEmailAndPassword, handleLoginAuthSuccess]
   );
 
   const loginWithGoogle = useCallback(async () => {
@@ -147,26 +159,26 @@ export const useAuth = (): UseAuthReturn => {
       const result = await signInWithGoogle();
 
       if (result?.user) {
-        await handleAuthSuccess(result.user);
+        await handleLoginAuthSuccess(result.user);
       }
     } catch (error: any) {
       throw error;
     }
-  }, [signInWithGoogle, handleAuthSuccess]);
+  }, [signInWithGoogle, handleLoginAuthSuccess]);
 
   const signupWithEmail = useCallback(
-    async (email: string, password: string) => {
+    async (email: string, password: string, name: string) => {
       try {
         const result = await createUserWithEmailAndPassword(email, password);
 
         if (result?.user) {
-          await handleAuthSuccess(result.user);
+          await handleSignupAuthSuccess(result.user, name);
         }
       } catch (error: any) {
         throw error;
       }
     },
-    [createUserWithEmailAndPassword, handleAuthSuccess]
+    [createUserWithEmailAndPassword, handleSignupAuthSuccess]
   );
 
   const signupWithGoogle = useCallback(async () => {
@@ -174,12 +186,12 @@ export const useAuth = (): UseAuthReturn => {
       const result = await signInWithGoogle();
 
       if (result?.user) {
-        await handleAuthSuccess(result.user);
+        await handleSignupAuthSuccess(result.user, "");
       }
     } catch (error: any) {
       throw error;
     }
-  }, [signInWithGoogle, handleAuthSuccess]);
+  }, [signInWithGoogle, handleSignupAuthSuccess]);
 
   const logout = useCallback(async () => {
     try {
@@ -203,8 +215,6 @@ export const useAuth = (): UseAuthReturn => {
     signupWithEmail,
     signupWithGoogle,
     logout,
-    createChat,
-
     // Loading states
     emailLoginLoading,
     googleLoading,

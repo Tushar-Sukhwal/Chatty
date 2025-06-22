@@ -12,6 +12,7 @@ interface ChatStore {
     lastMessage: Message;
   }[];
   activeChat: Chat | null;
+  activeChatName: string | null;
   //Actions
   setChats: (
     chats: {
@@ -22,6 +23,7 @@ interface ChatStore {
     }[]
   ) => void;
   setActiveChat: (chat: Chat) => void;
+  setActiveChatName: (name: string) => void;
 }
 
 export const useChatStore = create<ChatStore>()(
@@ -30,6 +32,7 @@ export const useChatStore = create<ChatStore>()(
       (set, get) => ({
         chats: [],
         activeChat: null,
+        activeChatName: null,
         setChats: (
           chats: {
             chat: Chat;
@@ -42,6 +45,9 @@ export const useChatStore = create<ChatStore>()(
         },
         setActiveChat: (chat: Chat) => {
           set({ activeChat: chat });
+        },
+        setActiveChatName: (name: string) => {
+          set({ activeChatName: name });
         },
       }),
       {

@@ -35,11 +35,11 @@ export declare interface IMessageDocument extends Document {
 
 export declare interface IUserDocument extends Document {
   _id: Schema.Types.ObjectId;
+  name: string;
   email: string;
   userName: string;
   avatar?: string;
   lastSocketConnectedAt: Date;
   chats: Schema.Types.ObjectId[];
   friends: Schema.Types.ObjectId[];
-  
 }

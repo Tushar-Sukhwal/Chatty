@@ -5,6 +5,8 @@ import { useAuth } from "@/hooks/useAuth";
 import Sidebar from "@/components/sidebar/Sidebar";
 import ChatArea from "@/components/chatArea/chatArea";
 import SocketSingleton from "@/services/socketService";
+import { UserApi } from "@/api/userApi";
+import { useEffect } from "react";
 
 export default function DashboardPage() {
   const { user, socketToken, firebaseToken } = useUserStore();
@@ -12,6 +14,14 @@ export default function DashboardPage() {
 
   const socket = SocketSingleton.getInstance();
   socket.connect();
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const user = await UserApi.getMe();
+      useUserStore.setState({ user });
+    };
+    fetchUser();
+  }, []);
 
   return (
     <div className=" flex w-full h-screen">

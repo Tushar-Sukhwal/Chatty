@@ -11,24 +11,54 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { User } from "@/types/types";
+import { UserApi } from "@/api/userApi";
+import UserCard from "./userCard";
 
 const AddUserModal = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<User[]>([]);
+  const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
+  const prevQuery = useRef<string>("");
 
-  const handleAddUser = () => {
-    // TODO: add user
-    console.log("add user");
-  };
+  useEffect(() => {
+    // Only search if query changed and is not empty
+    if (searchQuery.trim() === "") {
+      setSearchResults([]);
+      prevQuery.current = "";
+      return;
+    }
 
-  const handleSearch = () => {
-    // TODO: search for user
-    console.log("search for user");
+    // Clear previous timeout if exists
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current);
+    }
 
-    
-  };
+    debounceTimeout.current = setTimeout(async () => {
+      // Only search if query actually changed
+      if (searchQuery.trim() !== prevQuery.current) {
+        try {
+          const response = await UserApi.searchUsersWithNameOrEmail(
+            searchQuery
+          );
+          setSearchResults(response);
+          console.log(response);
+          prevQuery.current = searchQuery.trim();
+        } catch (err) {
+          setSearchResults([]);
+        }
+      }
+    }, 500);
+
+    return () => {
+      if (debounceTimeout.current) {
+        clearTimeout(debounceTimeout.current);
+      }
+    };
+  }, [searchQuery]);
+
+
 
   return (
     <DialogContent className="sm:max-w-[425px]">
@@ -44,14 +74,14 @@ const AddUserModal = () => {
           <Input
             id="name-1"
             name="name"
-            defaultValue="Pedro Duarte"
+            value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
         <div className="grid gap-3">
           <Label htmlFor="username-1">Search Results</Label>
           {searchResults.map((user) => (
-            <div key={user._id}>{user.userName}</div>
+            <UserCard key={user._id} user={user} />
           ))}
         </div>
       </div>
@@ -59,7 +89,7 @@ const AddUserModal = () => {
         <DialogClose asChild>
           <Button variant="outline">Cancel</Button>
         </DialogClose>
-        <Button type="submit">Save changes</Button>
+        <Button >Save changes</Button>
       </DialogFooter>
     </DialogContent>
   );

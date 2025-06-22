@@ -10,11 +10,13 @@ interface UserStore {
   firebaseToken: string | null;
   /** Indicates that the persisted state has been loaded on the client */
   hasHydrated: boolean;
+  friends: User[] | null;
   //Actions
   setUser: (user: User | null) => void;
   setSocketToken: (token: string) => void;
   setFirebaseToken: (token: string) => void;
   setHasHydrated: (state: boolean) => void;
+  setFriends: (friends: User[] | null) => void;
 }
 
 export const useUserStore = create<UserStore>()(
@@ -25,10 +27,12 @@ export const useUserStore = create<UserStore>()(
         socketToken: null,
         firebaseToken: null,
         hasHydrated: false,
+        friends: null,
         setUser: (user: User | null) => set({ user }),
         setSocketToken: (token: string) => set({ socketToken: token }),
         setFirebaseToken: (token: string) => set({ firebaseToken: token }),
         setHasHydrated: (state: boolean) => set({ hasHydrated: state }),
+        setFriends: (friends: User[] | null) => set({ friends }),
       }),
       {
         name: "user-store",

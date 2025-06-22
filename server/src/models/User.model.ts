@@ -3,6 +3,11 @@ import { IUserDocument } from "../types/models";
 
 const UserSchema = new Schema<IUserDocument>(
   {
+    name: {
+      type: String,
+      // required: true,
+      trim: true,
+    },
     email: {
       type: String,
       required: true,

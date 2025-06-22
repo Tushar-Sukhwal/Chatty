@@ -1,21 +1,22 @@
 export interface User {
+  name: string;
   _id: string;
   email: string;
   userName: string;
   avatar?: string;
   lastSocketConnectedAt: Date;
-  chats: string[];
-  friends: string[];
+  chats: Chat[];
+  friends: User[];
 }
 
 export interface Chat {
-  chatId: string;
-  chatName: string;
-  chatType: string;
-  chatMembers: string[];
-  chatMessages: Message[];
-  chatCreatedAt: Date;
-  chatUpdatedAt: Date;
+  _id: string;
+  type: string;
+  name: string;
+  description: string;
+  avatar: string;
+  createdBy: string;
+  participants: { user: User; lastSeen: Date }[];
 }
 
 export interface Message {

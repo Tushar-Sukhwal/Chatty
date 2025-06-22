@@ -3,12 +3,11 @@ import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "../ui/button";
 import { Plus } from "lucide-react";
 import AddUserModal from "../userProfile/addUserModal";
+import CreateChatModal from "../createChat/createChatModal";
 
 type Props = {};
 
 const SidebarNav = (props: Props) => {
-
-
   const handleAddGroup = () => {
     // TODO handleAddGroup
   };
@@ -21,12 +20,10 @@ const SidebarNav = (props: Props) => {
         </div>
         <h1 className="text-2xl font-bold">Chatty</h1>
         <Dialog>
-          <DialogTrigger>
-            <button>add friend</button>
-          </DialogTrigger>
+          <DialogTrigger>add friend</DialogTrigger>
           <AddUserModal />
         </Dialog>
-        <button onClick={handleAddGroup}>add group</button>
+        <CreateChatModal />
       </div>
     </div>
   );

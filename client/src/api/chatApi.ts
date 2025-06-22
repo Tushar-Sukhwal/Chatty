@@ -3,18 +3,18 @@ import { useUserStore } from "@/store/userStore";
 import { Chat } from "@/types/types";
 
 export const ChatApi = {
-  createChat: async (userId: string) => {
+  createChat: async (emails: string[]) => {
     const token = useUserStore.getState().firebaseToken || "";
     const response = await api.post(
       "/api/chats",
-      { userId },
+      { emails },
       {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       }
     );
-    return response.data;
+    return response.data.data;
   },
   getChatsWithMessages: async () => {
     const token = useUserStore.getState().firebaseToken || "";

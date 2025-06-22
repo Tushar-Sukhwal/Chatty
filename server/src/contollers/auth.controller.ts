@@ -21,6 +21,11 @@ export class AuthController {
   static async signup(req: Request, res: Response): Promise<void> {
     try {
       const emailResult = emailSchema.safeParse(req.user?.email);
+      if (!req.body.name && !req.user?.name) {
+        res.status(400).json({ message: "Name is required" });
+        return;
+      }
+      const name = req.body.name || req.user?.name;
 
       if (!emailResult.success) {
         res.status(400).json({ message: "Invalid email address" });
@@ -29,6 +34,7 @@ export class AuthController {
 
       const email = emailResult.data;
       const avatar = req.user?.picture || "";
+      console.log(email);
 
       const existingUser = await User.findOne({ email });
 
@@ -38,9 +44,15 @@ export class AuthController {
       }
 
       const userName = await generateUserId(email);
+      console.log("userName", userName);
+      const user = await User.create({
+        email,
+        name,
+        userName: userName,
+        avatar: avatar,
+      });
 
-      const user = await User.create({ email, userName, avatar });
-
+      await (await user.populate("friends")).populate("chats");
       const token = jwt.sign(
         { userId: user._id, userName: user.userName },
         process.env.JWT_SECRET!
@@ -75,6 +87,7 @@ export class AuthController {
         return;
       }
 
+      await (await user.populate("friends")).populate("chats");
       const token = jwt.sign(
         { userId: user._id, userName: user.userName },
         process.env.JWT_SECRET!
