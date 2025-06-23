@@ -1,7 +1,7 @@
 import React from "react";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "../ui/button";
-import { Plus, UserPlus } from "lucide-react";
+import { Plus, UserPlus, MessageCirclePlus } from "lucide-react";
 import AddUserModal from "../userProfile/addUserModal";
 import CreateChatModal from "../createChat/createChatModal";
 
@@ -32,7 +32,19 @@ const SidebarNav = (props: Props) => {
           <AddUserModal />
         </Dialog>
 
-        {/* <CreateChatModal /> */}
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-gray-600 hover:text-gray-900"
+            >
+              <MessageCirclePlus className="h-4 w-4 mr-1" />
+              New Chat
+            </Button>
+          </DialogTrigger>
+          <CreateChatModal />
+        </Dialog>
       </div>
     </div>
   );

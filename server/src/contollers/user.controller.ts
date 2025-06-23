@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import User from "../models/User.model";
 import { emailSchema } from "../validation/auth.validation";
 import Chat from "../models/Chat.model";
+import { io } from "..";
 
 export class UserController {
   static async getMe(req: Request, res: Response) {
@@ -115,6 +116,13 @@ export class UserController {
     await user.save();
     friend.chats.push(chat._id);
     await friend.save();
+
+    io.emit("triggerChatUpdate", {
+      chatId: chat._id,
+      chatName: chat.name,
+      chatType: chat.type,
+      chatParticipants: chat.participants,
+    });
 
     //send the updated user data to the client
     res.status(200).json({

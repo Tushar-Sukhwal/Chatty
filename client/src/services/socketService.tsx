@@ -3,6 +3,7 @@ import { useChatStore } from "@/store/chatStore";
 import { useUserStore } from "@/store/userStore";
 import { Message, User } from "@/types/types";
 import { io, Socket } from "socket.io-client";
+import { UserApi } from "@/api/userApi";
 
 class SocketSingleton {
   private static instance: SocketSingleton;
@@ -84,6 +85,11 @@ class SocketSingleton {
         onlineUsers: state.onlineUsers?.filter((id) => id !== userId),
       }));
     });
+
+    this.socket.on("triggerChatUpdate", async (data: any) => {
+      const user = await UserApi.getMe();
+      useUserStore.setState({ user });
+    });
   }
 
   public connect(): void {
@@ -102,6 +108,7 @@ class SocketSingleton {
     content: string;
     chatId: string;
     senderId: string;
+    createdAt: Date;
   }) {
     let ret: string | null = null;
     this.socket.emit("sendMessage", messageData, (response: any) => {

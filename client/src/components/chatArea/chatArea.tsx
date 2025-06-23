@@ -5,9 +5,79 @@ import ChatAreaMessage from "./chatAreaMessage";
 import { useChatStore } from "@/store/chatStore";
 import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
+import { Message } from "@/types/types";
 
 type Props = {
   hideMobileNav?: boolean;
+};
+
+// Component for date separator
+const DateSeparator = ({ date }: { date: string }) => {
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    // Reset time to compare only dates
+    const messageDate = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate()
+    );
+    const todayDate = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate()
+    );
+    const yesterdayDate = new Date(
+      yesterday.getFullYear(),
+      yesterday.getMonth(),
+      yesterday.getDate()
+    );
+
+    if (messageDate.getTime() === todayDate.getTime()) {
+      return "Today";
+    } else if (messageDate.getTime() === yesterdayDate.getTime()) {
+      return "Yesterday";
+    } else {
+      return date.toLocaleDateString([], {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    }
+  };
+
+  return (
+    <div className="flex justify-center my-4">
+      <div className="bg-white px-3 py-1 rounded-full shadow-sm border border-gray-200">
+        <span className="text-xs text-gray-600 font-medium">
+          {formatDate(date)}
+        </span>
+      </div>
+    </div>
+  );
+};
+
+// Function to group messages by date
+const groupMessagesByDate = (messages: Message[]) => {
+  const groups: { [key: string]: Message[] } = {};
+
+  messages.forEach((message) => {
+    if (message.createdAt) {
+      const date = new Date(message.createdAt);
+      const dateKey = date.toISOString().split("T")[0]; // YYYY-MM-DD format
+
+      if (!groups[dateKey]) {
+        groups[dateKey] = [];
+      }
+      groups[dateKey].push(message);
+    }
+  });
+
+  return groups;
 };
 
 const ChatArea = ({ hideMobileNav = false }: Props) => {
@@ -84,8 +154,12 @@ const ChatArea = ({ hideMobileNav = false }: Props) => {
     (message) => message.chatId === activeChat._id
   );
 
+  // Group messages by date
+  const messageGroups = groupMessagesByDate(filteredMessages);
+  const sortedDates = Object.keys(messageGroups).sort();
+
   return (
-    <div className="flex flex-col h-full bg-white relative">
+    <div className="flex flex-col h-full bg-gray-50 relative">
       {/* Navigation Header - Hidden on mobile when hideMobileNav is true */}
       {!hideMobileNav && (
         <div className="hidden md:block">
@@ -99,7 +173,7 @@ const ChatArea = ({ hideMobileNav = false }: Props) => {
       {/* Messages Area - scrollable with proper mobile spacing */}
       <div
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3 md:space-y-4"
+        className="flex-1 overflow-y-auto p-3 md:p-4"
         onScroll={handleScroll}
       >
         {filteredMessages.length === 0 ? (
@@ -109,13 +183,26 @@ const ChatArea = ({ hideMobileNav = false }: Props) => {
             </p>
           </div>
         ) : (
-          <>
-            {filteredMessages.map((message) => (
-              <ChatAreaMessage key={message.messageId} message={message} />
+          <div className="space-y-1">
+            {sortedDates.map((date) => (
+              <div key={date}>
+                {/* Date separator */}
+                <DateSeparator date={date} />
+
+                {/* Messages for this date */}
+                <div className="space-y-1">
+                  {messageGroups[date].map((message) => (
+                    <ChatAreaMessage
+                      key={message.messageId}
+                      message={message}
+                    />
+                  ))}
+                </div>
+              </div>
             ))}
             {/* Invisible div to scroll to */}
             <div ref={messagesEndRef} />
-          </>
+          </div>
         )}
       </div>
 

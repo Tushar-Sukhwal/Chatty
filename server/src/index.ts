@@ -31,15 +31,17 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/message", messageRoutes);
-app.use("/api/user", userRoutes); 
+app.use("/api/user", userRoutes);
 
 connectDB();
 
 const PORT = process.env.PORT || 3000;
 
 const server = http.createServer(app);
-initializeSocket(server);
+const io = initializeSocket(server);
 
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+export { io };

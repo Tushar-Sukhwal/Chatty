@@ -32,7 +32,7 @@ const SidebarFooter = (props: Props) => {
   };
 
   return (
-    <div className="h-16 bg-white border-t border-gray-200 px-4 flex items-center justify-between">
+    <div className="h-17 bg-white border-t border-gray-200 px-4 flex items-center justify-between">
       <div className="flex items-center gap-3">
         <Avatar className="h-8 w-8">
           <AvatarImage src={user?.avatar} alt={user?.name} />

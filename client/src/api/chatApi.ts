@@ -1,19 +1,21 @@
 import api from "@/config/axios";
 import { useUserStore } from "@/store/userStore";
 import { Chat } from "@/types/types";
+import { toast } from "sonner";
 
 export const ChatApi = {
-  createChat: async (emails: string[]) => {
+  createChat: async (emails: string[], chatName: string) => {
     const token = useUserStore.getState().socketToken || "";
     const response = await api.post(
-      "/api/chats",
-      { emails },
+      "/api/chat",
+      { emails, chatName },
       {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       }
     );
+    toast.message(response.data.message);
     return response.data.data;
   },
   getChatsWithMessages: async () => {

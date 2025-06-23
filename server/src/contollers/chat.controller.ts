@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import Chat from "../models/Chat.model";
 import { emailSchema } from "../validation/auth.validation";
 import User from "../models/User.model";
+import { io } from "..";
 
 export class ChatController {
   /**
@@ -33,11 +34,13 @@ export class ChatController {
 
   static async createChat(req: Request, res: Response) {
     const emails = req.body.emails;
+    const chatName = req.body.chatName;
     const user = await User.findOne({ email: req.user?.email });
     if (!user) {
       res.status(404).json({ message: "User not found" });
       return;
     }
+
     //check if the emails are valid
     const validEmails = emails.every(
       (email: string) => emailSchema.safeParse(email).success
@@ -56,7 +59,11 @@ export class ChatController {
       res.status(400).json({ message: "Duplicate email addresses" });
       return;
     }
-
+    if (!chatName || chatName === "") {
+      res.status(400).json({
+        message: "please provide chatName",
+      });
+    }
     //check if the emails are friends
     const friends = await User.find({ email: { $in: emails } });
     if (friends.length !== emails.length) {
@@ -68,15 +75,32 @@ export class ChatController {
       res.status(400).json({ message: "chat already exists" });
     }
 
+    const participants = friends.map((friend) => ({ user: friend._id }));
+    participants.push({ user: user._id });
+
     //create the chat
     const chat = await Chat.create({
+      name: chatName,
       type: "group",
-      participants: friends.map((friend) => ({ user: friend._id })),
+      participants,
+      createdBy: user._id,
     });
+
+    user.chats.push(chat._id);
+    await user.save();
+
+    for (const friend of friends) {
+      friend.chats.push(chat._id);
+      await friend.save();
+    }
+
     res.status(200).json({
       message: "Group chat created successfully",
       data: chat,
     });
+
+    io.emit("triggerChatUpdate", {});
+
     return;
   }
 }

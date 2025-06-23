@@ -23,6 +23,7 @@ const ChatAreaFooter = () => {
       content: message,
       chatId: activeChat._id,
       senderId: user._id,
+      createdAt: new Date(),
     });
 
     // Create new message object
