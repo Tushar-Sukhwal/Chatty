@@ -11,6 +11,7 @@ import api from "@/config/axios";
 import { Chat, User } from "@/types/types";
 import { useUserStore } from "@/store/userStore";
 import { useChatStore } from "@/store/chatStore";
+import { toast } from "sonner";
 
 interface AuthResponse {
   user: User;
@@ -76,35 +77,48 @@ export const useAuth = (): UseAuthReturn => {
 
   // API call for backend authentication
   const authApiLogin = useCallback(
-    async (token: string): Promise<AuthResponse> => {
-      const response = await api.post(
-        "/api/auth/login",
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      return response.data;
+    async (token: string): Promise<AuthResponse | null> => {
+      try {
+        const response = await api.post(
+          "/api/auth/login",
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        toast.message(response.data.message);
+        return response.data;
+      } catch (error: any) {
+        console.log(error); 
+        toast.error(error.response.data.message);
+        return null;
+      }
     },
     []
   );
 
   const authApiSignup = useCallback(
-    async (token: string, name: string): Promise<AuthResponse> => {
-      const response = await api.post(
-        "/api/auth/signup",
-        {
-          name,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
+    async (token: string, name: string): Promise<AuthResponse | null> => {
+      try {
+        const response = await api.post(
+          "/api/auth/signup",
+          {
+            name,
           },
-        }
-      );
-      return response.data;
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        toast.message(response.data.message);
+        return response.data;
+      } catch (error: any) {
+        toast.error(error.message);
+        return null;
+      }
     },
     []
   );
@@ -114,6 +128,10 @@ export const useAuth = (): UseAuthReturn => {
     async (firebaseUser: any) => {
       const token = await firebaseUser.getIdToken();
       const authResponse = await authApiLogin(token);
+
+      if (!authResponse) {
+        return;
+      }
 
       setUser(authResponse.user);
       setSocketToken(authResponse.token);
@@ -128,6 +146,10 @@ export const useAuth = (): UseAuthReturn => {
     async (firebaseUser: any, name: string) => {
       const token = await firebaseUser.getIdToken();
       const authResponse = await authApiSignup(token, name);
+
+      if (!authResponse) {
+        return;
+      }
 
       setUser(authResponse.user);
       setSocketToken(authResponse.token);
@@ -148,6 +170,7 @@ export const useAuth = (): UseAuthReturn => {
           await handleLoginAuthSuccess(result.user);
         }
       } catch (error: any) {
+        toast.error(error.message);
         throw error;
       }
     },
