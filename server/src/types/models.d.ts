@@ -31,6 +31,7 @@ export declare interface IMessageDocument extends Document {
   // deliveredAt?: Date;
   readAt?: Date;
   editedAt?: Date;
+  isEdited: boolean;
 }
 
 export declare interface IUserDocument extends Document {

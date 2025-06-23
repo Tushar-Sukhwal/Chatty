@@ -56,6 +56,10 @@ const MessageSchema = new Schema<IMessageDocument>(
     editedAt: {
       type: Date,
     },
+    isEdited: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

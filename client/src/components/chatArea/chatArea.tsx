@@ -119,6 +119,10 @@ const ChatArea = ({ hideMobileNav = false }: Props) => {
     setTimeout(() => setIsUserScrolling(false), 1000);
   };
 
+  const handleMessageEdit = (messageId: string, content: string) => {
+    
+  };
+
   // Scroll to bottom when messages change (only if user is near bottom or not scrolling)
   useEffect(() => {
     if (!isUserScrolling && isNearBottom()) {

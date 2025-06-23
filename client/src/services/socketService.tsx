@@ -4,6 +4,7 @@ import { useUserStore } from "@/store/userStore";
 import { Message, User } from "@/types/types";
 import { io, Socket } from "socket.io-client";
 import { UserApi } from "@/api/userApi";
+import { toast } from "sonner";
 
 class SocketSingleton {
   private static instance: SocketSingleton;
@@ -71,7 +72,6 @@ class SocketSingleton {
       useChatStore.setState({
         messages: [...useChatStore.getState().messages, message],
       });
-      console.log("New message received:", message);
     });
 
     this.socket.on("online", (userId: string) => {
@@ -89,6 +89,17 @@ class SocketSingleton {
     this.socket.on("triggerChatUpdate", async (data: any) => {
       const user = await UserApi.getMe();
       useUserStore.setState({ user });
+    });
+
+    this.socket.on("updateEditMessage", (message: Message) => {
+      console.log("Message edited:", message);
+      useChatStore.setState({
+        messages: useChatStore
+          .getState()
+          .messages.map((m) =>
+            m.messageId === message.messageId ? message : m
+          ),
+      });
     });
   }
 
@@ -109,12 +120,31 @@ class SocketSingleton {
     chatId: string;
     senderId: string;
     createdAt: Date;
-  }) {
-    let ret: string | null = null;
-    this.socket.emit("sendMessage", messageData, (response: any) => {
-      ret = response;
+  }): Promise<string> {
+    return new Promise((resolve, reject) => {
+      this.socket.emit("sendMessage", messageData, (response: any) => {
+        console.log("ret", response);
+        resolve(response);
+      });
     });
-    return ret;
+  }
+
+  public editMessage(messageId: string, content: string) {
+    this.socket.emit("editMessage", { messageId, content }, (response: any) => {
+      const res = JSON.parse(response);
+      if (res.status === "success") {
+        useChatStore.setState({
+          messages: useChatStore
+            .getState()
+            .messages.map((message) =>
+              message.messageId === messageId ? res.data : message
+            ),
+        });
+      } else {
+        return false;
+      }
+    });
+    return true;
   }
 }
 

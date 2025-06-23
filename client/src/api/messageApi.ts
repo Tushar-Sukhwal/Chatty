@@ -1,6 +1,7 @@
 import api from "@/config/axios";
 import { useUserStore } from "@/store/userStore";
 import { Message, User } from "@/types/types";
+import { toast } from "sonner";
 
 export const MessageApi = {
   getAllMessages: async (): Promise<Message[]> => {
@@ -10,6 +11,7 @@ export const MessageApi = {
         Authorization: `Bearer ${token}`,
       },
     });
+    toast.message(response.data.message);
     return response.data.data;
   },
 };

@@ -15,11 +15,11 @@ const ChatAreaFooter = () => {
   const socketService = SocketService.getInstance();
 
   // Handle form submit
-  const handleSendMessage = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSendMessage = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (message.trim() === "" || !activeChat || !user) return;
 
-    const messageId = socketService.sendMessage({
+    const messageId = await socketService.sendMessage({
       content: message,
       chatId: activeChat._id,
       senderId: user._id,
@@ -28,7 +28,7 @@ const ChatAreaFooter = () => {
 
     // Create new message object
     const newMessage = {
-      messageId: messageId || Date.now().toString(),
+      messageId: messageId,
       content: message.trim(),
       chatId: activeChat._id,
       senderId: user._id,

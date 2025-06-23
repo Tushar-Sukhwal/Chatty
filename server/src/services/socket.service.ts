@@ -78,16 +78,19 @@ const handleSendMessage = async (
 ) => {
   console.log("sendMessage", data);
   // Generate uuid4 for messageId
-  data.messageId = uuidv4();
+  const messageId = uuidv4();
+  data.messageId = messageId;
 
   // Push message to Kafka
   // await KafkaService.publishMessage("NEW_MESSAGE", data);
 
   // Push message to db
-  const newMessage = await Message.create(data);
+  const newMessage = await Message.create({
+    ...data,
+    messageId: messageId,
+  });
 
   // Respond with the messageId
-  callback(data.messageId);
 
   const chatId = data.chatId;
   const chat = await Chat.findById(chatId);
@@ -113,48 +116,7 @@ const handleSendMessage = async (
       }
     }
   });
-};
-
-const handleMessageEdit = async (
-  socket: Socket,
-  data: IMessageDocument,
-  callback: (messageId: string) => void
-) => {
-  const msgFromDb = await Message.findById(data.messageId);
-  if (!msgFromDb) {
-    callback("Message not found");
-    return;
-  }
-
-  //chatId, messageId, senderId, type, replyTo, sentAt, deliverdAt, readAt should be same
-  if (
-    msgFromDb.chatId !== data.chatId ||
-    msgFromDb.messageId !== data.messageId ||
-    msgFromDb.senderId !== data.senderId ||
-    msgFromDb.type !== data.type ||
-    msgFromDb.replyTo !== data.replyTo ||
-    msgFromDb.sentAt !== data.sentAt ||
-    msgFromDb.readAt !== data.readAt
-  ) {
-    callback("Message not allowed to edit");
-    return;
-  }
-  //kafka
-  await KafkaService.publishMessage("EDIT_MESSAGE", data); //TODO: add edit message to kafka
-
-  //notify all participants except the sender
-  const chat = await Chat.findById(data.chatId);
-  chat?.participants.forEach(async (participant) => {
-    if (participant.user.toString() !== data.senderId.toString()) {
-      const participantSocketId = await RedisService.getSocketIdFromMongoId(
-        participant.user
-      );
-      if (participantSocketId) {
-        socket.to(participantSocketId).emit("updateEditMessage", data);
-      }
-    }
-  });
-  callback("Message edited successfully");
+  callback(messageId);
 };
 
 const handleMessageDelete = async (
@@ -213,6 +175,65 @@ const handleAddChat = async (
   }
 };
 
+const handleEditMessage = async (
+  socket: Socket,
+  data: { messageId: string; content: string },
+  callback: (messageId: string) => void
+) => {
+  //TODO: add edit message to kafka
+
+  const message = await Message.findOne({ messageId: data.messageId });
+  if (!message) {
+    callback(
+      JSON.stringify({
+        message: "Message not found",
+        status: "error",
+      })
+    );
+    return;
+  }
+  //user id from socket using redis
+  const user = await RedisService.getMongoIdFromSocketId(socket.id);
+  if (!user) {
+    callback("User not found");
+    return;
+  }
+  //check if the message is from the user
+  if (message.senderId.toString() !== user.toString()) {
+    callback(
+      JSON.stringify({
+        message: "You are not authorized to edit this message",
+        status: "error",
+      })
+    );
+    return;
+  }
+  //update the message
+  message.content = data.content;
+  message.isEdited = true;
+  await message.save();
+  callback(
+    JSON.stringify({
+      message: "Message edited successfully",
+      status: "success",
+      data: message,
+    })
+  );
+
+  //notify all participants except the sender
+  const chat = await Chat.findById(message.chatId);
+  chat?.participants.forEach(async (participant) => {
+    if (participant.user.toString() !== user.toString()) {
+      const participantSocketId = await RedisService.getSocketIdFromMongoId(
+        participant.user
+      );
+      if (participantSocketId) {
+        socket.to(participantSocketId).emit("updateEditMessage", message);
+      }
+    }
+  });
+};
+
 export const initializeSocket = (server: Server) => {
   io = new SocketServer(server, {
     cors: {
@@ -231,7 +252,7 @@ export const initializeSocket = (server: Server) => {
     });
 
     socket.on("editMessage", async (data, callback) => {
-      handleMessageEdit(socket, data, callback);
+      handleEditMessage(socket, data, callback);
     });
 
     socket.on("deleteMessage", async (data, callback) => {
