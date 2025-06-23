@@ -34,10 +34,24 @@ const handleConnection = async (socket: Socket) => {
   });
 };
 
-const handleDisconnect = (socket: Socket) => {
+const handleDisconnect = async (socket: Socket) => {
   const mongoId = socket.mongoId;
   console.log(`${mongoId} disconnected`);
   RedisService.socketDisconnectProcess(socket.id, mongoId!);
+
+  const user = await User.findById(mongoId);
+  if (!user) {
+    socket.emit("error", "User not found");
+    return;
+  }
+  const friends = user.friends;
+  //send offline status to all friends
+  friends.forEach(async (friend) => {
+    const friendSocketId = await RedisService.getSocketIdFromMongoId(friend);
+    if (friendSocketId) {
+      socket.to(friendSocketId).emit("offline", mongoId);
+    }
+  });
 };
 
 /**

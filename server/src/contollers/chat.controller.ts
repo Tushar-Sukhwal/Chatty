@@ -65,15 +65,7 @@ export class ChatController {
     }
 
     if (emails.length === 1) {
-      const chat = await Chat.create({
-        type: "direct",
-        participants: [{ user: user._id, lastSeen: new Date() }],
-      });
-      res.status(200).json({
-        message: "Direct chat created successfully",
-        data: chat,
-      });
-      return;
+      res.status(400).json({ message: "chat already exists" });
     }
 
     //create the chat

@@ -1,9 +1,11 @@
+"use client";
 import { useChatStore } from "@/store/chatStore";
 import { Chat, User } from "@/types/types";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useUserStore } from "@/store/userStore";
 
 type Props = {
   chat: Chat;
@@ -13,7 +15,9 @@ type Props = {
 const SidebarTabs = (props: Props) => {
   const { chat, user } = props;
   const { setActiveChat, setActiveChatName, activeChat } = useChatStore();
+  const { onlineUsers } = useUserStore();
   const isActive = activeChat?._id === chat._id;
+  const [online, setOnline] = useState(false);
 
   const chatName =
     chat.type === "group"
@@ -21,6 +25,19 @@ const SidebarTabs = (props: Props) => {
       : chat.participants.find(
           (participant) => participant.user._id !== user._id
         )?.user?.name;
+
+  //if direct chat then if the user._id is present in onlineUsers then show online
+  useEffect(() => {
+    if (
+      chat.type === "direct" &&
+      (onlineUsers?.includes(chat.participants[0].user._id) ||
+        onlineUsers?.includes(chat.participants[1].user._id))
+    ) {
+      setOnline(true);
+    } else {
+      setOnline(false);
+    }
+  }, [onlineUsers]);
 
   const chatAvatar =
     chat.type === "group"
@@ -76,7 +93,7 @@ const SidebarTabs = (props: Props) => {
                 isActive ? "text-blue-600" : "text-gray-500"
               )}
             >
-              {chat.type}
+              {online ? "Online" : "Offline"}
             </span>
             {/* Add last message time or unread count here */}
             <span className="text-xs text-gray-400">

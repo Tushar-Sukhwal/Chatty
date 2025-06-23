@@ -4,7 +4,7 @@ import { Message, User } from "@/types/types";
 
 export const MessageApi = {
   getAllMessages: async (): Promise<Message[]> => {
-    const token = useUserStore.getState().firebaseToken || "";
+    const token = useUserStore.getState().socketToken || "";
     const response = await api.get("/api/message", {
       headers: {
         Authorization: `Bearer ${token}`,

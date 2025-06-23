@@ -5,7 +5,7 @@ import { toast } from "sonner";
 
 export const UserApi = {
   getMe: async (): Promise<User> => {
-    const token = useUserStore.getState().firebaseToken || "";
+    const token = useUserStore.getState().socketToken || "";
     const response = await api.get("/api/user/me", {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -15,7 +15,7 @@ export const UserApi = {
   },
 
   searchUsersWithNameOrEmail: async (nameOrEmail: string): Promise<User[]> => {
-    const token = useUserStore.getState().firebaseToken || "";
+    const token = useUserStore.getState().socketToken || "";
     const response = await api.get(
       `/api/user/get-user-by-username-or-email/${nameOrEmail}`,
       {
@@ -29,7 +29,7 @@ export const UserApi = {
 
   addUserToFriends: async (friendEmail: string): Promise<User> => {
     try {
-      const token = useUserStore.getState().firebaseToken || "";
+      const token = useUserStore.getState().socketToken || "";
       const response = await api.post(
         `/api/user/add-user-to-friends/${friendEmail}`,
         {},

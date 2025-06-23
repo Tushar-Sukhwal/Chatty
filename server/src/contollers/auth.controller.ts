@@ -54,10 +54,15 @@ export class AuthController {
 
       await (await user.populate("friends")).populate("chats");
       const token = jwt.sign(
-        { userId: user._id, userName: user.userName },
+        {
+          _id: user._id,
+          userName: user.userName,
+          email: user.email,
+          name: user.name,
+          avatar: user.avatar,
+        },
         process.env.JWT_SECRET!
       );
-
       res.status(201).json({ user, token });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
@@ -89,11 +94,18 @@ export class AuthController {
 
       await (await user.populate("friends")).populate("chats");
       const token = jwt.sign(
-        { userId: user._id, userName: user.userName },
+        {
+          _id: user._id,
+          userName: user.userName,
+          email: user.email,
+          name: user.name,
+          avatar: user.avatar,
+        },
         process.env.JWT_SECRET!
       );
       res.status(200).json({ user, token });
     } catch (error) {
+      console.log(error);
       res.status(500).json({ message: "Internal server error" });
     }
   }

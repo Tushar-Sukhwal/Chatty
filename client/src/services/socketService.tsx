@@ -1,6 +1,7 @@
 // src/services/SocketSingleton.ts
 import { useChatStore } from "@/store/chatStore";
-import { Message } from "@/types/types";
+import { useUserStore } from "@/store/userStore";
+import { Message, User } from "@/types/types";
 import { io, Socket } from "socket.io-client";
 
 class SocketSingleton {
@@ -70,6 +71,18 @@ class SocketSingleton {
         messages: [...useChatStore.getState().messages, message],
       });
       console.log("New message received:", message);
+    });
+
+    this.socket.on("online", (userId: string) => {
+      useUserStore.setState((state) => ({
+        onlineUsers: [...(state.onlineUsers || []), userId],
+      }));
+    });
+
+    this.socket.on("offline", (userId: string) => {
+      useUserStore.setState((state) => ({
+        onlineUsers: state.onlineUsers?.filter((id) => id !== userId),
+      }));
     });
   }
 
