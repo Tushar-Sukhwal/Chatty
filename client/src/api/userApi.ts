@@ -45,4 +45,15 @@ export const UserApi = {
       throw error;
     }
   },
+
+  fetchOnlineUsers: async (): Promise<string[]> => {
+    const token = useUserStore.getState().socketToken || "";
+    const response = await api.get("/api/user/online-users", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    console.log(response.data.data);
+    return response.data.data;
+  },
 };

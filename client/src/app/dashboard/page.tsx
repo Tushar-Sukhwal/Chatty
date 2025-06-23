@@ -23,8 +23,10 @@ export default function DashboardPage() {
     const fetchUser = async () => {
       const user = await UserApi.getMe();
       const messages = await MessageApi.getAllMessages();
+      const onlineUsers = await UserApi.fetchOnlineUsers();
       useChatStore.setState({ messages });
       useUserStore.setState({ user });
+      useUserStore.setState({ onlineUsers });
     };
     fetchUser();
   }, []);

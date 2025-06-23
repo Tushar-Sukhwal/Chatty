@@ -42,13 +42,27 @@ export class RedisService {
     return await redis.get(key);
   }
 
+  static async getOnlineUsers(): Promise<string[]> {
+    const keys = await redis.keys("online:*");
+    return keys.map((key) => key.split(":")[1]);
+  }
+
+  static async getOnlineStatus(
+    mongoId: Schema.Types.ObjectId
+  ): Promise<boolean> {
+    const key = `online:${mongoId}`;
+    const value = await redis.get(key);
+    return value === "true";
+  }
+
   static async socketDisconnectProcess(
     socketId: string,
     mongoId: Schema.Types.ObjectId
   ) {
     if (!mongoId) return;
     await this.setOnlineStatus(mongoId, false);
-    await this.getSocketIdFromMongoId(mongoId);
-    await this.getMongoIdFromSocketId(socketId);
+    // Remove the mapping keys from Redis
+    await redis.del(`mongoIdToSocketId:${mongoId}`);
+    await redis.del(`socketIdToMongoId:${socketId}`);
   }
 }

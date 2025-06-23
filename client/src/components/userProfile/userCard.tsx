@@ -35,9 +35,8 @@ const UserCard = (props: Props) => {
           )}
         </div>
         <div className="flex flex-col">
-          <span className="font-medium text-gray-900">
-            {props.user.userName}
-          </span>
+          <span className="font-medium text-gray-900">{props.user.name}</span>
+          <span className="text-sm text-gray-600">@{props.user.userName}</span>
           <span className="text-xs text-gray-500">{props.user.email}</span>
         </div>
         <Button className="ml-auto" onClick={handleAddUser}>

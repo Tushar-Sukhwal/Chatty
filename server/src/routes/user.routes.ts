@@ -21,4 +21,7 @@ router.post(
 //http://localhost:8000/api/user/me
 router.get("/me", verifyFirebaseToken, UserController.getMe);
 
+//http://localhost:8000/api/user/online-users
+router.get("/online-users", verifyFirebaseToken, UserController.getOnlineUsers);
+
 export default router;

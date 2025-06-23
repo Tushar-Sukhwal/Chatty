@@ -3,6 +3,7 @@ import User from "../models/User.model";
 import { emailSchema } from "../validation/auth.validation";
 import Chat from "../models/Chat.model";
 import { io } from "..";
+import { RedisService } from "../services/redis.service";
 
 export class UserController {
   static async getMe(req: Request, res: Response) {
@@ -21,13 +22,16 @@ export class UserController {
   static async getUserByUserNameOrEmail(req: Request, res: Response) {
     const { userNameOrEmail } = req.params;
     // Use a case-insensitive regex for fuzzy search
-    const nameUsers = await User.find({
+    const userNameUsers = await User.find({
       userName: { $regex: userNameOrEmail, $options: "i" },
     });
     const emailUsers = await User.find({
       email: { $regex: userNameOrEmail, $options: "i" },
     });
-    const users = [...nameUsers, ...emailUsers];
+    const nameUsers = await User.find({
+      name: { $regex: userNameOrEmail, $options: "i" },
+    });
+    const users = [...userNameUsers, ...emailUsers, ...nameUsers];
     if (!users || users.length === 0) {
       res.status(404).json({ message: "No users found" });
       return;
@@ -46,6 +50,7 @@ export class UserController {
     );
     const usersData = uniqueUsers.map((user) => ({
       _id: user._id,
+      name: user.name,
       userName: user.userName,
       avatar: user.avatar,
       email: user.email,
@@ -128,6 +133,30 @@ export class UserController {
     res.status(200).json({
       message: "Friend added successfully",
       data: user.populate("friends"),
+    });
+  }
+
+  static async getOnlineUsers(req: Request, res: Response) {
+    const email = req.user?.email;
+    const user = await User.findOne({ email });
+    if (!user) {
+      res.status(404).json({ message: "User not found" });
+      return;
+    }
+    const friends = user.friends;
+    const onlineUsers: string[] = [];
+    friends.forEach(async (friend) => {
+      const isOnline = await RedisService.getOnlineStatus(friend);
+      if (isOnline) {
+        onlineUsers.push(friend.toString());
+      }
+    });
+    const globalOnlineUsers = await RedisService.getOnlineUsers();
+    console.log("globalOnlineUsers", globalOnlineUsers);
+    console.log("onlineUsers", onlineUsers);
+    res.status(200).json({
+      message: "Online users fetched successfully",
+      data: onlineUsers,
     });
   }
 }
