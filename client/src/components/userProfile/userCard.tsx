@@ -3,7 +3,6 @@ import { User } from "@/types/types";
 import React from "react";
 import { toast } from "sonner";
 import { Button } from "../ui/button";
-import { useUserStore } from "@/store/userStore";
 
 type Props = {
   user: User;
@@ -15,7 +14,6 @@ const UserCard = (props: Props) => {
     toast.success("User added to friends", {
       description: "You can now chat with this user",
     });
-    useUserStore.getState().setFriends(response.friends);
   };
 
   return (
