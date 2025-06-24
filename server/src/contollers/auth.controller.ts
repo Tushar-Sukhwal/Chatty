@@ -88,7 +88,7 @@ export class AuthController {
 
       const user = await User.findOne({ email });
       if (!user) {
-        res.status(400).json({ message: "User not found" });
+        res.status(400).json({ message: "User not found Please Signup" });
         return;
       }
 

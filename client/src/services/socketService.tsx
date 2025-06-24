@@ -14,9 +14,8 @@ class SocketSingleton {
   private maxReconnectAttempts: number = 5;
 
   private constructor() {
-    const socketEndpoint =
-      process.env.NEXT_PUBLIC_WEBSOCKET_URL || "https://list.tusharsukhwal.com";
-
+    const socketEndpoint = process.env.NEXT_PUBLIC_API_URL;
+    console.log("socketEndpoint", socketEndpoint);
     const user = localStorage.getItem("user-store");
     const token = user ? JSON.parse(user).state.socketToken : null;
     this.socket = io(socketEndpoint, {

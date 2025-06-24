@@ -28,4 +28,5 @@ export interface Message {
   receiverId?: string;
   createdAt?: Date;
   isEdited?: boolean;
+  replyToMessageId?: string; //message id
 }
