@@ -43,8 +43,7 @@ const MessageSchema = new Schema<IMessageDocument>(
       default: false,
     },
     replyTo: {
-      type: Schema.Types.ObjectId,
-      ref: "Message",
+      type: String, // uuid 4
     },
     sentAt: {
       type: Date,

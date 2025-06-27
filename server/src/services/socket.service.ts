@@ -74,6 +74,15 @@ const handleSendMessage = async (
   const messageId = uuidv4();
   data.messageId = messageId;
 
+  if (data.replyTo) {
+    const replyToMessage = await Message.findOne({ messageId: data.replyTo });
+    if (!replyToMessage) {
+      callback("Reply to message not found");
+      return;
+    }
+    data.replyTo = replyToMessage.messageId!;
+  }
+
   // Push message to Kafka
   // await KafkaService.publishMessage("NEW_MESSAGE", data);
 

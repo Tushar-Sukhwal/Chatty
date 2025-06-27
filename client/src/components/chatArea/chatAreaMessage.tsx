@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { useChatStore } from "@/store/chatStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Edit2, Check, X, MoreVertical, Trash2 } from "lucide-react";
+import { Edit2, Check, X, MoreVertical, Trash2, Reply } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +20,9 @@ type Props = {
   setIsReplying: (isReplying: boolean) => void;
   replyToMessage: Message | null;
   setReplyToMessage: (replyToMessage: Message | null) => void;
+  scrollToMessage: (messageId: string) => void;
+  messageRefs: React.MutableRefObject<{ [key: string]: HTMLDivElement | null }>;
+  highlightedMessageId: string | null;
 };
 
 const ChatAreaMessage = ({
@@ -28,10 +31,13 @@ const ChatAreaMessage = ({
   setIsReplying,
   replyToMessage,
   setReplyToMessage,
+  scrollToMessage,
+  messageRefs,
+  highlightedMessageId,
 }: Props) => {
   const { user } = useUserStore();
   const isOwnMessage = message.senderId === user?._id;
-  const { activeChat } = useChatStore();
+  const { activeChat, messages } = useChatStore();
   const isGroupChat = activeChat?.type === "group";
 
   // Edit state
@@ -41,18 +47,42 @@ const ChatAreaMessage = ({
 
   const socketService = SocketService.getInstance();
 
+  // Find the original message if this is a reply
+  const originalMessage = message.replyTo
+    ? messages.find((msg) => msg.messageId === message.replyTo)
+    : null;
+
   // Get sender's name for group chats
-  const getSenderName = () => {
-    if (isOwnMessage) return "You";
+  const getSenderName = (senderId?: string) => {
+    const targetId = senderId || message.senderId;
+    if (targetId === user?._id) return "You";
     if (!isGroupChat || !user?.friends) return "";
 
-    const sender = user.friends.find(
-      (friend) => friend._id === message.senderId
-    );
+    const sender = user.friends.find((friend) => friend._id === targetId);
     return sender?.name || "Unknown User";
   };
 
   const senderName = getSenderName();
+
+  // Handle double click to reply
+  const handleDoubleClick = () => {
+    setReplyToMessage(message);
+    setIsReplying(true);
+  };
+
+  // Handle reply action from dropdown
+  const handleReply = () => {
+    setReplyToMessage(message);
+    setIsReplying(true);
+    setIsDropdownOpen(false);
+  };
+
+  // Handle clicking on replied message preview to scroll to original
+  const handleRepliedMessageClick = () => {
+    if (originalMessage?.messageId) {
+      scrollToMessage(originalMessage.messageId);
+    }
+  };
 
   const handleMessageEdit = () => {
     setIsEditing(true);
@@ -127,7 +157,14 @@ const ChatAreaMessage = ({
   };
 
   return (
-    <div className="flex w-full mb-1 group">
+    <div
+      ref={(el) => {
+        if (message.messageId) {
+          messageRefs.current[message.messageId] = el;
+        }
+      }}
+      className="flex w-full mb-1 group"
+    >
       <div
         className={cn(
           "flex flex-col max-w-[85%] sm:max-w-xs lg:max-w-md",
@@ -136,17 +173,38 @@ const ChatAreaMessage = ({
       >
         <div
           className={cn(
-            "relative px-3 py-2 rounded-lg break-words shadow-sm",
+            "relative px-3 py-2 rounded-lg break-words shadow-sm cursor-pointer transition-all duration-300",
             isOwnMessage
               ? "bg-[#dcf8c6] text-gray-900 rounded-br-sm"
-              : "bg-white text-gray-900 rounded-bl-sm border border-gray-100"
+              : "bg-white text-gray-900 rounded-bl-sm border border-gray-100",
+            highlightedMessageId === message.messageId &&
+              "ring-2 ring-blue-400 ring-opacity-75 shadow-lg scale-[1.02]"
           )}
+          onDoubleClick={handleDoubleClick}
         >
           {/* Show sender name for group chats */}
           {isGroupChat && !isOwnMessage && senderName && (
             <p className="text-xs font-semibold mb-1 text-blue-600">
               {senderName}
             </p>
+          )}
+
+          {/* Show replied message if this is a reply */}
+          {originalMessage && (
+            <div
+              className="mb-2 p-2 bg-gray-100 rounded border-l-4 border-blue-500 cursor-pointer hover:bg-gray-200 transition-colors"
+              onClick={handleRepliedMessageClick}
+            >
+              <div className="flex items-center gap-1 mb-1">
+                <Reply className="h-3 w-3 text-blue-500" />
+                <span className="text-xs font-medium text-blue-600">
+                  {getSenderName(originalMessage.senderId)}
+                </span>
+              </div>
+              <p className="text-xs text-gray-600 line-clamp-2">
+                {originalMessage.content}
+              </p>
+            </div>
           )}
 
           {/* Edit mode */}
@@ -193,36 +251,42 @@ const ChatAreaMessage = ({
                 )}
               </div>
 
-              {/* Message actions for own messages */}
-              {isOwnMessage && (
-                <DropdownMenu
-                  open={isDropdownOpen}
-                  onOpenChange={setIsDropdownOpen}
-                >
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <MoreVertical className="h-3 w-3" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-32">
-                    <DropdownMenuItem onClick={handleMessageEdit}>
-                      <Edit2 className="h-3 w-3 mr-2" />
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={handleMessageDelete}
-                      className="text-red-600"
-                    >
-                      <Trash2 className="h-3 w-3 mr-2" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
+              {/* Message actions dropdown */}
+              <DropdownMenu
+                open={isDropdownOpen}
+                onOpenChange={setIsDropdownOpen}
+              >
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <MoreVertical className="h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-32">
+                  <DropdownMenuItem onClick={handleReply}>
+                    <Reply className="h-3 w-3 mr-2" />
+                    Reply
+                  </DropdownMenuItem>
+                  {isOwnMessage && (
+                    <>
+                      <DropdownMenuItem onClick={handleMessageEdit}>
+                        <Edit2 className="h-3 w-3 mr-2" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={handleMessageDelete}
+                        className="text-red-600"
+                      >
+                        <Trash2 className="h-3 w-3 mr-2" />
+                        Delete
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           )}
 

@@ -26,7 +26,7 @@ export declare interface IMessageDocument extends Document {
   status: string;
   deletedFor: Schema.Types.ObjectId[];
   deletedForEveryone: boolean;
-  replyTo: Schema.Types.ObjectId;
+  replyTo: string;
   sentAt: Date;
   // deliveredAt?: Date;
   readAt?: Date;

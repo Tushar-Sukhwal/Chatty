@@ -126,9 +126,18 @@ class SocketSingleton {
     chatId: string;
     senderId: string;
     createdAt: Date;
+    replyToMessageId?: string;
   }): Promise<string> {
     return new Promise((resolve, reject) => {
-      this.socket.emit("sendMessage", messageData, (response: any) => {
+      // Prepare the data to send to server, mapping replyToMessageId to replyTo if provided
+      const serverMessageData = {
+        ...messageData,
+        ...(messageData.replyToMessageId && {
+          replyTo: messageData.replyToMessageId,
+        }),
+      };
+
+      this.socket.emit("sendMessage", serverMessageData, (response: any) => {
         console.log("ret", response);
         resolve(response);
       });

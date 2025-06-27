@@ -3,6 +3,7 @@ import ChatAreaFooter from "./chatAreaFooter";
 import ChatAreaNav from "./chatAreaNav";
 import ChatAreaMessage from "./chatAreaMessage";
 import { useChatStore } from "@/store/chatStore";
+import { useUserStore } from "@/store/userStore";
 import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
 import { Message } from "@/types/types";
@@ -88,10 +89,35 @@ const ChatArea = ({ hideMobileNav = false }: Props) => {
   const [isUserScrolling, setIsUserScrolling] = useState(false);
   const [isReplying, setIsReplying] = useState(false);
   const [replyToMessage, setReplyToMessage] = useState<Message | null>(null); // msg to reply to
+  const [highlightedMessageId, setHighlightedMessageId] = useState<
+    string | null
+  >(null);
+
+  // Store refs for each message to enable scrolling to specific messages
+  const messageRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   // Auto-scroll to bottom when messages change
   const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
     messagesEndRef.current?.scrollIntoView({ behavior });
+  };
+
+  // Function to scroll to a specific message and highlight it
+  const scrollToMessage = (messageId: string) => {
+    const messageElement = messageRefs.current[messageId];
+    if (messageElement) {
+      messageElement.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+
+      // Highlight the message
+      setHighlightedMessageId(messageId);
+
+      // Remove highlight after 3 seconds
+      setTimeout(() => {
+        setHighlightedMessageId(null);
+      }, 3000);
+    }
   };
 
   // Check if user is near the bottom of the scroll
@@ -123,10 +149,20 @@ const ChatArea = ({ hideMobileNav = false }: Props) => {
 
   const handleMessageEdit = (messageId: string, content: string) => {};
 
-  // Scroll to bottom when messages change (only if user is near bottom or not scrolling)
+  // Scroll to bottom when messages change
   useEffect(() => {
-    if (!isUserScrolling && isNearBottom()) {
-      scrollToBottom();
+    if (messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      const { user } = useUserStore.getState();
+
+      // Always scroll if the last message is from current user (just sent a message)
+      // Or scroll if user is near bottom and not currently scrolling
+      if (
+        lastMessage.senderId === user?._id ||
+        (!isUserScrolling && isNearBottom())
+      ) {
+        scrollToBottom();
+      }
     }
   }, [messages]);
 
@@ -203,6 +239,9 @@ const ChatArea = ({ hideMobileNav = false }: Props) => {
                       setIsReplying={setIsReplying}
                       replyToMessage={replyToMessage}
                       setReplyToMessage={setReplyToMessage}
+                      scrollToMessage={scrollToMessage}
+                      messageRefs={messageRefs}
+                      highlightedMessageId={highlightedMessageId}
                     />
                   ))}
                 </div>
