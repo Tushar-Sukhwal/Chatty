@@ -17,6 +17,7 @@ export interface Chat {
   avatar: string;
   createdBy: string;
   participants: { user: User; lastSeen: Date }[];
+  createdAt?: Date;
 }
 
 export interface Message {

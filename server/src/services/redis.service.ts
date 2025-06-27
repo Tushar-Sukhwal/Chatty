@@ -28,6 +28,14 @@ export class RedisService {
     await redis.set(key, socketId);
   }
 
+  static async setOpenChat(
+    mongoId: Schema.Types.ObjectId,
+    chatId: Schema.Types.ObjectId
+  ) {
+    const key = `openChat:${mongoId}`;
+    await redis.set(key, chatId.toString());
+  }
+
   static async getSocketIdFromMongoId(
     mongoId: Schema.Types.ObjectId
   ): Promise<string | null> {
@@ -55,6 +63,19 @@ export class RedisService {
     return value === "true";
   }
 
+  static async getOpenChat(
+    mongoId: Schema.Types.ObjectId
+  ): Promise<Schema.Types.ObjectId | null> {
+    const key = `openChat:${mongoId}`;
+    const chatId = await redis.get(key);
+    return chatId ? new Schema.Types.ObjectId(chatId) : null;
+  }
+
+  static async delOpenChat(mongoId: Schema.Types.ObjectId) {
+    const key = `openChat:${mongoId}`;
+    await redis.del(key);
+  }
+
   static async socketDisconnectProcess(
     socketId: string,
     mongoId: Schema.Types.ObjectId
@@ -64,5 +85,6 @@ export class RedisService {
     // Remove the mapping keys from Redis
     await redis.del(`mongoIdToSocketId:${mongoId}`);
     await redis.del(`socketIdToMongoId:${socketId}`);
+    await redis.del(`openChat:${mongoId}`);
   }
 }

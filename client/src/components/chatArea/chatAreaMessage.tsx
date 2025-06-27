@@ -242,8 +242,8 @@ const ChatAreaMessage = ({
           ) : (
             /* Normal message display */
             <div className="flex items-end gap-2">
-              <div className="flex-1">
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm leading-relaxed whitespace-pre-wrap break-words break-all overflow-wrap-anywhere">
                   {message.content}
                 </p>
                 {message.isEdited && (
@@ -260,7 +260,7 @@ const ChatAreaMessage = ({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
                   >
                     <MoreVertical className="h-3 w-3" />
                   </Button>

@@ -8,6 +8,7 @@ import Message from "../models/Message.model";
 import { IChatDocument, IMessageDocument } from "../types/models";
 import { KafkaService } from "./kafka.service";
 import { v4 as uuidv4 } from "uuid";
+import { Schema } from "mongoose";
 
 export let io: SocketServer;
 
@@ -209,6 +210,22 @@ const handleEditMessage = async (
   socket.to(message.chatId.toString()).emit("updateEditMessage", message);
 };
 
+const handleOpenChat = async (
+  socket: Socket,
+  data: { chatId: string },
+  callback: (messageId: string) => void
+) => {
+  //TODO: add open chat to kafka
+
+  if (data.chatId === "-1") {
+    RedisService.delOpenChat(socket.mongoId!);
+  }
+
+  const mongoId = socket.mongoId;
+  const chatId = new Schema.Types.ObjectId(data.chatId);
+  RedisService.setOpenChat(mongoId!, chatId);
+};
+
 export const initializeSocket = (server: Server) => {
   io = new SocketServer(server, {
     cors: {
@@ -236,6 +253,10 @@ export const initializeSocket = (server: Server) => {
 
     socket.on("addChat", async (data, callback) => {
       handleAddChat(socket, data, callback);
+    });
+
+    socket.on("openChat", async (data, callback) => {
+      handleOpenChat(socket, data, callback);
     });
 
     socket.on("disconnect", async () => {

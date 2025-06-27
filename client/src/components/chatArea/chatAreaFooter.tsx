@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Button } from "../ui/button";
 import { Smile, Paperclip, Camera, Send, Plus, X, Reply } from "lucide-react";
-import { Input } from "../ui/input";
+import { Textarea } from "../ui/textarea";
 import { useChatStore } from "@/store/chatStore";
 import { useUserStore } from "@/store/userStore";
 import SocketService from "@/services/socketService";
@@ -22,6 +22,27 @@ const ChatAreaFooter = ({
   const { user } = useUserStore();
   const [message, setMessage] = useState("");
   const [showExtraButtons, setShowExtraButtons] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-resize textarea function
+  const autoResizeTextarea = () => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = "auto";
+      const newHeight = Math.min(textarea.scrollHeight, 120); // Max height of ~6 lines
+      textarea.style.height = `${newHeight}px`;
+    }
+  };
+
+  // Auto-resize when message changes
+  useEffect(() => {
+    autoResizeTextarea();
+  }, [message]);
+
+  // Auto-resize on component mount
+  useEffect(() => {
+    autoResizeTextarea();
+  }, []);
 
   const socketService = SocketService.getInstance();
 
@@ -75,6 +96,13 @@ const ChatAreaFooter = ({
     handleCancelReply();
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage(e as any);
+    }
+  };
+
   return (
     <div className="border-t border-gray-200 bg-white flex-shrink-0">
       {/* Reply Preview */}
@@ -109,19 +137,15 @@ const ChatAreaFooter = ({
           {/* Mobile Layout */}
           <div className="md:hidden">
             <div className="flex items-end gap-2 mb-2">
-              <Input
+              <Textarea
                 placeholder={
                   isReplying ? "Reply to message..." : "Type a message..."
                 }
-                className="flex-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500 min-h-[2.5rem]"
+                className="flex-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500 min-h-[2.5rem] max-h-[120px] resize-none overflow-y-auto"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendMessage(e as any);
-                  }
-                }}
+                onKeyDown={handleKeyDown}
+                ref={textareaRef}
               />
               <Button
                 type="submit"
@@ -189,19 +213,15 @@ const ChatAreaFooter = ({
             >
               <Paperclip className="h-5 w-5" />
             </Button>
-            <Input
+            <Textarea
               placeholder={
                 isReplying ? "Reply to message..." : "Type a message..."
               }
-              className="flex-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+              className="flex-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500 min-h-[2.5rem] max-h-[120px] resize-none overflow-y-auto"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendMessage(e as any);
-                }
-              }}
+              onKeyDown={handleKeyDown}
+              ref={textareaRef}
             />
             <Button
               type="button"

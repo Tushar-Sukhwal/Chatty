@@ -161,6 +161,12 @@ class SocketSingleton {
     });
     return true;
   }
+
+  public openChat(chatId: string) {
+    this.socket.emit("openChat", chatId, (response: any) => {
+      console.log("ret", response);
+    });
+  }
 }
 
 export default SocketSingleton;
