@@ -175,16 +175,16 @@ const ChatAreaMessage = ({
           className={cn(
             "relative px-3 py-2 rounded-lg break-words shadow-sm cursor-pointer transition-all duration-300",
             isOwnMessage
-              ? "bg-[#dcf8c6] text-gray-900 rounded-br-sm"
-              : "bg-white text-gray-900 rounded-bl-sm border border-gray-100",
+              ? "bg-[#dcf8c6] dark:bg-primary/20 text-gray-900 dark:text-foreground rounded-br-sm"
+              : "bg-white dark:bg-card text-gray-900 dark:text-foreground rounded-bl-sm border border-gray-100 dark:border-border",
             highlightedMessageId === message.messageId &&
-              "ring-2 ring-blue-400 ring-opacity-75 shadow-lg scale-[1.02]"
+              "ring-2 ring-blue-400 dark:ring-primary ring-opacity-75 shadow-lg scale-[1.02]"
           )}
           onDoubleClick={handleDoubleClick}
         >
           {/* Show sender name for group chats */}
           {isGroupChat && !isOwnMessage && senderName && (
-            <p className="text-xs font-semibold mb-1 text-blue-600">
+            <p className="text-xs font-semibold mb-1 text-blue-600 dark:text-primary">
               {senderName}
             </p>
           )}
@@ -192,16 +192,16 @@ const ChatAreaMessage = ({
           {/* Show replied message if this is a reply */}
           {originalMessage && (
             <div
-              className="mb-2 p-2 bg-gray-100 rounded border-l-4 border-blue-500 cursor-pointer hover:bg-gray-200 transition-colors"
+              className="mb-2 p-2 bg-gray-100 dark:bg-muted rounded border-l-4 border-blue-500 dark:border-primary cursor-pointer hover:bg-gray-200 dark:hover:bg-muted/80 transition-colors"
               onClick={handleRepliedMessageClick}
             >
               <div className="flex items-center gap-1 mb-1">
-                <Reply className="h-3 w-3 text-blue-500" />
-                <span className="text-xs font-medium text-blue-600">
+                <Reply className="h-3 w-3 text-blue-500 dark:text-primary" />
+                <span className="text-xs font-medium text-blue-600 dark:text-primary">
                   {getSenderName(originalMessage.senderId)}
                 </span>
               </div>
-              <p className="text-xs text-gray-600 line-clamp-2">
+              <p className="text-xs text-gray-600 dark:text-muted-foreground line-clamp-2">
                 {originalMessage.content}
               </p>
             </div>
@@ -214,7 +214,7 @@ const ChatAreaMessage = ({
                 value={editContent}
                 onChange={(e) => setEditContent(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="text-sm border-none p-0 focus-visible:ring-0 shadow-none bg-transparent"
+                className="text-sm border-none p-0 focus-visible:ring-0 shadow-none bg-transparent text-gray-900 dark:text-foreground"
                 autoFocus
               />
               <div className="flex gap-1 justify-end">
@@ -222,7 +222,7 @@ const ChatAreaMessage = ({
                   size="sm"
                   variant="ghost"
                   onClick={handleCancelEdit}
-                  className="h-6 w-6 p-0"
+                  className="h-6 w-6 p-0 text-gray-500 hover:text-gray-700 dark:text-muted-foreground dark:hover:text-foreground"
                 >
                   <X className="h-3 w-3" />
                 </Button>
@@ -230,7 +230,7 @@ const ChatAreaMessage = ({
                   size="sm"
                   variant="ghost"
                   onClick={handleSaveEdit}
-                  className="h-6 w-6 p-0"
+                  className="h-6 w-6 p-0 text-gray-500 hover:text-gray-700 dark:text-muted-foreground dark:hover:text-foreground"
                   disabled={
                     editContent.trim() === "" || editContent === message.content
                   }
@@ -247,7 +247,9 @@ const ChatAreaMessage = ({
                   {message.content}
                 </p>
                 {message.isEdited && (
-                  <span className="text-xs text-gray-500 italic">edited</span>
+                  <span className="text-xs text-gray-500 dark:text-muted-foreground italic">
+                    edited
+                  </span>
                 )}
               </div>
 
@@ -260,7 +262,7 @@ const ChatAreaMessage = ({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                    className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 text-gray-500 hover:text-gray-700 dark:text-muted-foreground dark:hover:text-foreground"
                   >
                     <MoreVertical className="h-3 w-3" />
                   </Button>
@@ -278,7 +280,7 @@ const ChatAreaMessage = ({
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={handleMessageDelete}
-                        className="text-red-600"
+                        className="text-red-600 dark:text-red-400"
                       >
                         <Trash2 className="h-3 w-3 mr-2" />
                         Delete
@@ -293,7 +295,7 @@ const ChatAreaMessage = ({
           {/* Timestamp and status indicators */}
           {!isEditing && message.createdAt && (
             <div className="flex items-center gap-1 justify-end mt-1">
-              <span className="text-xs text-gray-500 select-none">
+              <span className="text-xs text-gray-500 dark:text-muted-foreground select-none">
                 {formatTimestamp(message.createdAt)}
               </span>
               {isOwnMessage && (
@@ -303,7 +305,7 @@ const ChatAreaMessage = ({
                     width="16"
                     height="16"
                     viewBox="0 0 16 16"
-                    className="text-gray-400"
+                    className="text-gray-400 dark:text-muted-foreground"
                     fill="currentColor"
                   >
                     <path d="M15.01 3.316l-.478-.372a.365.365 0 0 0-.51.063L8.666 9.879a.32.32 0 0 1-.484.033l-.358-.325a.319.319 0 0 0-.484.032l-.378.483a.418.418 0 0 0 .036.541l1.32 1.266c.143.14.361.125.484-.033l6.272-8.048a.366.366 0 0 0-.064-.512zm-4.1 0l-.478-.372a.365.365 0 0 0-.51.063L4.566 9.879a.32.32 0 0 1-.484.033L1.891 7.769a.319.319 0 0 0-.484.032l-.378.483a.418.418 0 0 0 .036.541l3.61 3.465c.143.14.361.125.484-.033L10.907 3.879a.366.366 0 0 0-.064-.512z" />

@@ -104,19 +104,19 @@ const ChatAreaFooter = ({
   };
 
   return (
-    <div className="border-t border-gray-200 bg-white flex-shrink-0">
+    <div className="border-t border-gray-200 dark:border-border bg-white dark:bg-card flex-shrink-0">
       {/* Reply Preview */}
       {isReplying && replyToMessage && (
-        <div className="px-3 py-2 bg-gray-50 border-b border-gray-200">
+        <div className="px-3 py-2 bg-gray-50 dark:bg-muted border-b border-gray-200 dark:border-border">
           <div className="flex items-start gap-2">
             <div className="flex-1">
               <div className="flex items-center gap-1 mb-1">
-                <Reply className="h-3 w-3 text-blue-500" />
-                <span className="text-xs font-medium text-blue-600">
+                <Reply className="h-3 w-3 text-blue-500 dark:text-primary" />
+                <span className="text-xs font-medium text-blue-600 dark:text-primary">
                   Replying to {getReplyMessageSender()}
                 </span>
               </div>
-              <p className="text-sm text-gray-600 line-clamp-2 pl-4 border-l-2 border-blue-500">
+              <p className="text-sm text-gray-600 dark:text-muted-foreground line-clamp-2 pl-4 border-l-2 border-blue-500 dark:border-primary">
                 {replyToMessage.content}
               </p>
             </div>
@@ -124,7 +124,7 @@ const ChatAreaFooter = ({
               variant="ghost"
               size="sm"
               onClick={handleCancelReply}
-              className="h-6 w-6 p-0 text-gray-500 hover:text-gray-700"
+              className="h-6 w-6 p-0 text-gray-500 hover:text-gray-700 dark:text-muted-foreground dark:hover:text-foreground"
             >
               <X className="h-3 w-3" />
             </Button>
@@ -150,7 +150,7 @@ const ChatAreaFooter = ({
               <Button
                 type="submit"
                 size="sm"
-                className="bg-blue-600 hover:bg-blue-700 text-white h-10 w-10 flex-shrink-0"
+                className="bg-blue-600 hover:bg-blue-700 dark:bg-primary dark:hover:bg-primary/90 text-white dark:text-primary-foreground h-10 w-10 flex-shrink-0"
                 disabled={!message.trim()}
               >
                 <Send className="h-4 w-4" />
@@ -163,7 +163,7 @@ const ChatAreaFooter = ({
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="text-gray-500 hover:text-gray-700 h-8"
+                className="text-gray-500 hover:text-gray-700 dark:text-muted-foreground dark:hover:text-foreground h-8"
                 onClick={() => {
                   /* TODO: Add emoji picker */
                 }}
@@ -174,7 +174,7 @@ const ChatAreaFooter = ({
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="text-gray-500 hover:text-gray-700 h-8"
+                className="text-gray-500 hover:text-gray-700 dark:text-muted-foreground dark:hover:text-foreground h-8"
                 onClick={() => {
                   /* TODO: Add file attachment */
                 }}
@@ -185,7 +185,7 @@ const ChatAreaFooter = ({
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="text-gray-500 hover:text-gray-700 h-8"
+                className="text-gray-500 hover:text-gray-700 dark:text-muted-foreground dark:hover:text-foreground h-8"
                 onClick={() => {
                   /* TODO: Add camera */
                 }}
@@ -201,7 +201,7 @@ const ChatAreaFooter = ({
               type="button"
               variant="ghost"
               size="icon"
-              className="text-gray-500 hover:text-gray-700"
+              className="text-gray-500 hover:text-gray-700 dark:text-muted-foreground dark:hover:text-foreground"
             >
               <Smile className="h-5 w-5" />
             </Button>
@@ -209,7 +209,7 @@ const ChatAreaFooter = ({
               type="button"
               variant="ghost"
               size="icon"
-              className="text-gray-500 hover:text-gray-700"
+              className="text-gray-500 hover:text-gray-700 dark:text-muted-foreground dark:hover:text-foreground"
             >
               <Paperclip className="h-5 w-5" />
             </Button>
@@ -217,7 +217,7 @@ const ChatAreaFooter = ({
               placeholder={
                 isReplying ? "Reply to message..." : "Type a message..."
               }
-              className="flex-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500 min-h-[2.5rem] max-h-[120px] resize-none overflow-y-auto"
+              className="flex-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500 dark:border-border dark:focus:border-primary dark:focus:ring-primary min-h-[2.5rem] max-h-[120px] resize-none overflow-y-auto"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={handleKeyDown}
@@ -227,7 +227,7 @@ const ChatAreaFooter = ({
               type="button"
               variant="ghost"
               size="icon"
-              className="text-gray-500 hover:text-gray-700"
+              className="text-gray-500 hover:text-gray-700 dark:text-muted-foreground dark:hover:text-foreground"
             >
               <Camera className="h-5 w-5" />
             </Button>
@@ -235,7 +235,7 @@ const ChatAreaFooter = ({
               type="submit"
               variant="default"
               size="icon"
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-blue-600 hover:bg-blue-700 dark:bg-primary dark:hover:bg-primary/90 text-white dark:text-primary-foreground"
               disabled={!message.trim()}
             >
               <Send className="h-5 w-5" />

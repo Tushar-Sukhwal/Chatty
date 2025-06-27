@@ -18,8 +18,8 @@ const UserCard = (props: Props) => {
 
   return (
     <div>
-      <div className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-100 cursor-pointer border-b">
-        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+      <div className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-100 dark:hover:bg-muted cursor-pointer border-b border-gray-200 dark:border-border">
+        <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-muted flex items-center justify-center overflow-hidden">
           {props.user.avatar ? (
             <img
               src={props.user.avatar}
@@ -27,15 +27,21 @@ const UserCard = (props: Props) => {
               className="w-full h-full object-cover"
             />
           ) : (
-            <span className="text-lg font-bold text-gray-500">
+            <span className="text-lg font-bold text-gray-500 dark:text-muted-foreground">
               {props.user.userName?.[0]?.toUpperCase() || "U"}
             </span>
           )}
         </div>
         <div className="flex flex-col">
-          <span className="font-medium text-gray-900">{props.user.name}</span>
-          <span className="text-sm text-gray-600">@{props.user.userName}</span>
-          <span className="text-xs text-gray-500">{props.user.email}</span>
+          <span className="font-medium text-gray-900 dark:text-foreground">
+            {props.user.name}
+          </span>
+          <span className="text-sm text-gray-600 dark:text-muted-foreground">
+            @{props.user.userName}
+          </span>
+          <span className="text-xs text-gray-500 dark:text-muted-foreground">
+            {props.user.email}
+          </span>
         </div>
         <Button className="ml-auto" onClick={handleAddUser}>
           Add

@@ -53,8 +53,8 @@ const DateSeparator = ({ date }: { date: string }) => {
 
   return (
     <div className="flex justify-center my-4">
-      <div className="bg-white px-3 py-1 rounded-full shadow-sm border border-gray-200">
-        <span className="text-xs text-gray-600 font-medium">
+      <div className="bg-white dark:bg-card px-3 py-1 rounded-full shadow-sm border border-gray-200 dark:border-border">
+        <span className="text-xs text-gray-600 dark:text-muted-foreground font-medium">
           {formatDate(date)}
         </span>
       </div>
@@ -179,10 +179,12 @@ const ChatArea = ({ hideMobileNav = false }: Props) => {
 
   if (!activeChat) {
     return (
-      <div className="flex flex-col h-full bg-gray-50">
+      <div className="flex flex-col h-full bg-gray-50 dark:bg-background">
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-center text-gray-500">
-            <h3 className="text-xl font-medium mb-2">Welcome to Chatty</h3>
+          <div className="text-center text-gray-500 dark:text-muted-foreground">
+            <h3 className="text-xl font-medium mb-2 dark:text-foreground">
+              Welcome to Chatty
+            </h3>
             <p>Select a chat to start messaging</p>
           </div>
         </div>
@@ -199,7 +201,7 @@ const ChatArea = ({ hideMobileNav = false }: Props) => {
   const sortedDates = Object.keys(messageGroups).sort();
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 relative">
+    <div className="flex flex-col h-full bg-gray-50 dark:bg-background relative">
       {/* Navigation Header - Hidden on mobile when hideMobileNav is true */}
       {!hideMobileNav && (
         <div className="hidden md:block">
@@ -218,7 +220,7 @@ const ChatArea = ({ hideMobileNav = false }: Props) => {
       >
         {filteredMessages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
-            <p className="text-gray-500 text-center px-4">
+            <p className="text-gray-500 dark:text-muted-foreground text-center px-4">
               No messages yet. Start the conversation!
             </p>
           </div>
@@ -258,7 +260,7 @@ const ChatArea = ({ hideMobileNav = false }: Props) => {
         <div className="absolute bottom-20 right-4 z-10">
           <Button
             size="icon"
-            className="h-10 w-10 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg"
+            className="h-10 w-10 rounded-full bg-blue-600 hover:bg-blue-700 dark:bg-primary dark:hover:bg-primary/90 text-white dark:text-primary-foreground shadow-lg"
             onClick={() => {
               scrollToBottom();
               setShowScrollButton(false);

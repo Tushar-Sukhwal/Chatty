@@ -41,7 +41,7 @@ const ChatAreaNav = (props: Props) => {
   return (
     <>
       <div
-        className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 cursor-pointer hover:bg-gray-50 transition-colors"
+        className="h-16 bg-white dark:bg-card border-b border-gray-200 dark:border-border flex items-center justify-between px-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-accent transition-colors"
         onClick={handleNavClick}
       >
         <div className="flex items-center gap-3">
@@ -52,7 +52,7 @@ const ChatAreaNav = (props: Props) => {
             </AvatarFallback>
           </Avatar>
           <div className="flex flex-col">
-            <h2 className="font-semibold text-gray-900">
+            <h2 className="font-semibold text-gray-900 dark:text-foreground">
               {activeChatName || "Unknown Chat"}
             </h2>
             <div className="flex items-center gap-2">
@@ -60,7 +60,7 @@ const ChatAreaNav = (props: Props) => {
                 {badgeText}
               </Badge>
               {activeChat.type === "group" && (
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-gray-500 dark:text-muted-foreground">
                   {participantCount} member{participantCount !== 1 ? "s" : ""}
                 </span>
               )}
@@ -71,7 +71,7 @@ const ChatAreaNav = (props: Props) => {
         {/* Add more options here like video call, voice call, etc. */}
         <div className="flex items-center gap-2">
           {/* Placeholder for typing indicator */}
-          {/* <span className="text-xs text-gray-500">Someone is typing...</span> */}
+          {/* <span className="text-xs text-gray-500 dark:text-muted-foreground">Someone is typing...</span> */}
         </div>
       </div>
 

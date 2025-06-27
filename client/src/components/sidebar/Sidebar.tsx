@@ -80,7 +80,7 @@ const Sidebar = (props: Props) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-50">
+    <div className="flex flex-col h-full bg-gray-50 dark:bg-background">
       {/* Header */}
       <div className="flex-shrink-0">
         <SidebarNav />
@@ -130,7 +130,9 @@ const Sidebar = (props: Props) => {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3 }}
             >
-              <p className="text-gray-500 text-sm">No chats yet</p>
+              <p className="text-gray-500 dark:text-muted-foreground text-sm">
+                No chats yet
+              </p>
             </motion.div>
           )}
         </AnimatePresence>

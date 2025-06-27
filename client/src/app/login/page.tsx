@@ -52,16 +52,20 @@ const LoginPage = () => {
   }, [user, hasHydrated, router]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-background dark:to-muted p-4">
+      <Card className="w-full max-w-md shadow-lg dark:border-border">
         <CardHeader className="text-center">
-          <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-white font-bold text-xl">C</span>
+          <div className="w-12 h-12 bg-blue-600 dark:bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-white dark:text-primary-foreground font-bold text-xl">
+              C
+            </span>
           </div>
-          <CardTitle className="text-2xl font-bold text-gray-900">
+          <CardTitle className="text-2xl font-bold text-gray-900 dark:text-foreground">
             Welcome to Chatty
           </CardTitle>
-          <p className="text-gray-600">Sign in to your account</p>
+          <p className="text-gray-600 dark:text-muted-foreground">
+            Sign in to your account
+          </p>
         </CardHeader>
 
         <CardContent className="space-y-4">
@@ -113,7 +117,7 @@ const LoginPage = () => {
               <Separator className="w-full" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-gray-500">
+              <span className="bg-white dark:bg-card px-2 text-gray-500 dark:text-muted-foreground">
                 or continue with
               </span>
             </div>

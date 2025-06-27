@@ -9,12 +9,16 @@ type Props = {};
 
 const SidebarNav = (props: Props) => {
   return (
-    <div className="h-16 bg-white border-b border-gray-200 px-4 flex items-center justify-between">
+    <div className="h-16 bg-white dark:bg-card border-b border-gray-200 dark:border-border px-4 flex items-center justify-between">
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-          <span className="text-white font-bold text-lg">C</span>
+        <div className="w-8 h-8 bg-blue-600 dark:bg-primary rounded-full flex items-center justify-center">
+          <span className="text-white dark:text-primary-foreground font-bold text-lg">
+            C
+          </span>
         </div>
-        <h1 className="text-xl font-bold text-gray-900">Chatty</h1>
+        <h1 className="text-xl font-bold text-gray-900 dark:text-foreground">
+          Chatty
+        </h1>
       </div>
 
       <div className="flex items-center gap-2">
@@ -23,7 +27,7 @@ const SidebarNav = (props: Props) => {
             <Button
               variant="ghost"
               size="sm"
-              className="text-gray-600 hover:text-gray-900"
+              className="text-gray-600 hover:text-gray-900 dark:text-muted-foreground dark:hover:text-foreground"
             >
               <UserPlus className="h-4 w-4 mr-1" />
               Add Friend
@@ -37,7 +41,7 @@ const SidebarNav = (props: Props) => {
             <Button
               variant="ghost"
               size="sm"
-              className="text-gray-600 hover:text-gray-900"
+              className="text-gray-600 hover:text-gray-900 dark:text-muted-foreground dark:hover:text-foreground"
             >
               <MessageCirclePlus className="h-4 w-4 mr-1" />
               New Chat

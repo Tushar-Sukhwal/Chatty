@@ -96,8 +96,8 @@ const SidebarTabs = (props: Props) => {
       className={cn(
         "w-full p-3 rounded-lg cursor-pointer transition-colors duration-200 relative overflow-hidden",
         isActive
-          ? "bg-blue-50 border border-blue-200 shadow-sm"
-          : "bg-white border border-gray-200"
+          ? "bg-blue-50 dark:bg-accent border border-blue-200 dark:border-accent-foreground/20 shadow-sm"
+          : "bg-white dark:bg-card border border-gray-200 dark:border-border"
       )}
       onClick={handleChatSelect}
       layout
@@ -105,7 +105,6 @@ const SidebarTabs = (props: Props) => {
       animate={{ opacity: 1, y: 0 }}
       whileHover={{
         scale: 1.02,
-        backgroundColor: isActive ? undefined : "#f9fafb",
         transition: {
           type: "spring",
           stiffness: 400,
@@ -131,7 +130,7 @@ const SidebarTabs = (props: Props) => {
       {/* Active indicator */}
       {isActive && (
         <motion.div
-          className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 rounded-r-full"
+          className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 dark:bg-primary rounded-r-full"
           layoutId="activeIndicator"
           transition={{
             type: "spring",
@@ -149,15 +148,15 @@ const SidebarTabs = (props: Props) => {
         >
           <Avatar className="h-12 w-12 flex-shrink-0">
             <AvatarImage src={chatAvatar} alt={chatName} />
-            <AvatarFallback className="bg-gray-200 text-gray-700">
+            <AvatarFallback className="bg-gray-200 dark:bg-muted text-gray-700 dark:text-muted-foreground">
               {chatName?.charAt(0).toUpperCase() || "C"}
             </AvatarFallback>
           </Avatar>
           {chat.type === "direct" && (
             <motion.div
               className={cn(
-                "absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-white shadow-sm",
-                online ? "bg-green-500" : "bg-gray-400"
+                "absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-white dark:border-card shadow-sm",
+                online ? "bg-green-500" : "bg-gray-400 dark:bg-muted-foreground"
               )}
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
@@ -177,7 +176,9 @@ const SidebarTabs = (props: Props) => {
               <motion.h3
                 className={cn(
                   "font-medium truncate text-sm",
-                  isActive ? "text-blue-900" : "text-gray-900"
+                  isActive
+                    ? "text-blue-900 dark:text-accent-foreground"
+                    : "text-gray-900 dark:text-foreground"
                 )}
                 layoutId={`chatName-${chat._id}`}
               >
@@ -199,7 +200,7 @@ const SidebarTabs = (props: Props) => {
                       ease: "easeInOut",
                     }}
                   />
-                  <span className="text-xs text-green-600 font-medium">
+                  <span className="text-xs text-green-600 dark:text-green-400 font-medium">
                     Active
                   </span>
                 </motion.div>
@@ -211,7 +212,10 @@ const SidebarTabs = (props: Props) => {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.1 }}
               >
-                <Badge variant="secondary" className="text-xs ml-2 bg-gray-100">
+                <Badge
+                  variant="secondary"
+                  className="text-xs ml-2 bg-gray-100 dark:bg-muted dark:text-muted-foreground"
+                >
                   {chat.participants.length}
                 </Badge>
               </motion.div>
@@ -228,7 +232,9 @@ const SidebarTabs = (props: Props) => {
               <p
                 className={cn(
                   "text-xs truncate",
-                  isActive ? "text-gray-600" : "text-gray-500"
+                  isActive
+                    ? "text-gray-600 dark:text-muted-foreground"
+                    : "text-gray-500 dark:text-muted-foreground"
                 )}
               >
                 {lastMessage
@@ -237,7 +243,7 @@ const SidebarTabs = (props: Props) => {
               </p>
             </motion.div>
             <motion.span
-              className="text-xs text-gray-400 ml-2 flex-shrink-0"
+              className="text-xs text-gray-400 dark:text-muted-foreground ml-2 flex-shrink-0"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}

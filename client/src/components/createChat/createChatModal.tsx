@@ -82,14 +82,14 @@ const CreateChatModal = (props: Props) => {
           <Label>Select Friends ({selectedFriends.length} selected)</Label>
           <div className="max-h-48 overflow-y-auto space-y-2">
             {friends.length === 0 ? (
-              <p className="text-sm text-gray-500 py-4 text-center">
+              <p className="text-sm text-gray-500 dark:text-muted-foreground py-4 text-center">
                 No friends available. Add some friends first!
               </p>
             ) : (
               friends.map((friend: User) => (
                 <div
                   key={friend._id}
-                  className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50"
+                  className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-muted"
                 >
                   <Checkbox
                     id={friend._id}
@@ -97,14 +97,18 @@ const CreateChatModal = (props: Props) => {
                     onCheckedChange={() => handleFriendToggle(friend.email)}
                   />
                   <div className="flex items-center space-x-2 flex-1">
-                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                      <span className="text-white text-sm font-medium">
+                    <div className="w-8 h-8 bg-blue-500 dark:bg-primary rounded-full flex items-center justify-center">
+                      <span className="text-white dark:text-primary-foreground text-sm font-medium">
                         {friend.name.charAt(0).toUpperCase()}
                       </span>
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium">{friend.name}</p>
-                      <p className="text-xs text-gray-500">{friend.email}</p>
+                      <p className="text-sm font-medium text-foreground">
+                        {friend.name}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-muted-foreground">
+                        {friend.email}
+                      </p>
                     </div>
                   </div>
                 </div>

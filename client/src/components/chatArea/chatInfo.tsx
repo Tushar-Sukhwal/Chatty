@@ -121,7 +121,7 @@ const ChatInfo: React.FC<ChatInfoProps> = ({ isOpen, onClose }) => {
                 />
               ) : (
                 <div className="flex items-center gap-2 mt-1">
-                  <p className="font-medium">
+                  <p className="font-medium text-foreground">
                     {isGroupChat
                       ? activeChat.name || "Unnamed Group"
                       : otherParticipant?.user?.name || "Unknown User"}
@@ -148,7 +148,7 @@ const ChatInfo: React.FC<ChatInfoProps> = ({ isOpen, onClose }) => {
                     placeholder="Add a description..."
                   />
                 ) : (
-                  <p className="mt-1 text-sm text-gray-600">
+                  <p className="mt-1 text-sm text-gray-600 dark:text-muted-foreground">
                     {activeChat.description || "No description"}
                   </p>
                 )}
@@ -161,7 +161,7 @@ const ChatInfo: React.FC<ChatInfoProps> = ({ isOpen, onClose }) => {
                 <Badge variant="secondary">
                   {isGroupChat ? "Group Chat" : "Direct Chat"}
                 </Badge>
-                <div className="flex items-center gap-1 text-xs text-gray-500">
+                <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-muted-foreground">
                   <Calendar className="h-3 w-3" />
                   Created {formatDate(activeChat.createdAt || new Date())}
                 </div>
@@ -182,7 +182,7 @@ const ChatInfo: React.FC<ChatInfoProps> = ({ isOpen, onClose }) => {
               {activeChat.participants.map((participant) => (
                 <div
                   key={participant.user._id}
-                  className="flex items-center gap-3 p-2 rounded-lg bg-gray-50"
+                  className="flex items-center gap-3 p-2 rounded-lg bg-gray-50 dark:bg-muted"
                 >
                   <Avatar className="h-8 w-8">
                     <AvatarImage
@@ -194,11 +194,11 @@ const ChatInfo: React.FC<ChatInfoProps> = ({ isOpen, onClose }) => {
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">
+                    <p className="text-sm font-medium truncate text-foreground">
                       {participant.user.name}
                       {participant.user._id === user?._id && " (You)"}
                     </p>
-                    <p className="text-xs text-gray-500 truncate">
+                    <p className="text-xs text-gray-500 dark:text-muted-foreground truncate">
                       {participant.user.email}
                     </p>
                   </div>

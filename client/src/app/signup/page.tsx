@@ -106,16 +106,20 @@ const SignupPage = () => {
     password === confirmPassword;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-background dark:to-muted p-4">
+      <Card className="w-full max-w-md shadow-lg dark:border-border">
         <CardHeader className="text-center">
-          <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-white font-bold text-xl">C</span>
+          <div className="w-12 h-12 bg-blue-600 dark:bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-white dark:text-primary-foreground font-bold text-xl">
+              C
+            </span>
           </div>
-          <CardTitle className="text-2xl font-bold text-gray-900">
+          <CardTitle className="text-2xl font-bold text-gray-900 dark:text-foreground">
             Join Chatty
           </CardTitle>
-          <p className="text-gray-600">Create your account to get started</p>
+          <p className="text-gray-600 dark:text-muted-foreground">
+            Create your account to get started
+          </p>
         </CardHeader>
 
         <CardContent className="space-y-4">
@@ -138,7 +142,9 @@ const SignupPage = () => {
                 className={errors.name ? "border-red-500" : ""}
               />
               {errors.name && (
-                <p className="text-sm text-red-500">{errors.name}</p>
+                <p className="text-sm text-red-500 dark:text-red-400">
+                  {errors.name}
+                </p>
               )}
             </div>
 
@@ -154,7 +160,9 @@ const SignupPage = () => {
                 className={errors.email ? "border-red-500" : ""}
               />
               {errors.email && (
-                <p className="text-sm text-red-500">{errors.email}</p>
+                <p className="text-sm text-red-500 dark:text-red-400">
+                  {errors.email}
+                </p>
               )}
             </div>
 
@@ -179,16 +187,18 @@ const SignupPage = () => {
                   disabled={loading}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-4 w-4 text-gray-500" />
+                    <EyeOff className="h-4 w-4 text-gray-500 dark:text-muted-foreground" />
                   ) : (
-                    <Eye className="h-4 w-4 text-gray-500" />
+                    <Eye className="h-4 w-4 text-gray-500 dark:text-muted-foreground" />
                   )}
                 </Button>
               </div>
               {errors.password && (
-                <p className="text-sm text-red-500">{errors.password}</p>
+                <p className="text-sm text-red-500 dark:text-red-400">
+                  {errors.password}
+                </p>
               )}
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-500 dark:text-muted-foreground">
                 Must be at least 6 characters
               </p>
             </div>
@@ -216,14 +226,16 @@ const SignupPage = () => {
                   disabled={loading}
                 >
                   {showConfirmPassword ? (
-                    <EyeOff className="h-4 w-4 text-gray-500" />
+                    <EyeOff className="h-4 w-4 text-gray-500 dark:text-muted-foreground" />
                   ) : (
-                    <Eye className="h-4 w-4 text-gray-500" />
+                    <Eye className="h-4 w-4 text-gray-500 dark:text-muted-foreground" />
                   )}
                 </Button>
               </div>
               {errors.confirmPassword && (
-                <p className="text-sm text-red-500">{errors.confirmPassword}</p>
+                <p className="text-sm text-red-500 dark:text-red-400">
+                  {errors.confirmPassword}
+                </p>
               )}
             </div>
 
@@ -248,7 +260,7 @@ const SignupPage = () => {
               <Separator className="w-full" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-gray-500">
+              <span className="bg-white dark:bg-card px-2 text-gray-500 dark:text-muted-foreground">
                 or continue with
               </span>
             </div>

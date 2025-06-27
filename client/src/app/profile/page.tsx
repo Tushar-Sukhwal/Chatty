@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ArrowLeft, Camera, Save } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 const ProfilePage = () => {
   const { user } = useUserStore();
@@ -36,32 +37,39 @@ const ProfilePage = () => {
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <p className="text-gray-500">Loading...</p>
+      <div className="flex items-center justify-center h-screen bg-background">
+        <p className="text-muted-foreground">Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-background p-4">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-6">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.back()}
-            className="text-gray-600 hover:text-gray-900"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <h1 className="text-2xl font-bold text-gray-900">Profile</h1>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => router.back()}
+              className="text-gray-600 hover:text-gray-900 dark:text-muted-foreground dark:hover:text-foreground"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-foreground">
+              Profile
+            </h1>
+          </div>
+          <ThemeToggle />
         </div>
 
         {/* Profile Card */}
-        <Card className="mb-6">
+        <Card className="mb-6 shadow-sm dark:border-border">
           <CardHeader>
-            <CardTitle>Personal Information</CardTitle>
+            <CardTitle className="text-foreground">
+              Personal Information
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Avatar Section */}
@@ -69,14 +77,14 @@ const ProfilePage = () => {
               <div className="relative">
                 <Avatar className="h-20 w-20">
                   <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="text-2xl">
+                  <AvatarFallback className="text-2xl bg-muted text-muted-foreground">
                     {user.name?.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <Button
                   size="icon"
                   variant="secondary"
-                  className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full"
+                  className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full shadow-sm"
                   onClick={() => {
                     // TODO: Implement avatar upload
                     console.log("Upload avatar");
@@ -86,10 +94,12 @@ const ProfilePage = () => {
                 </Button>
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-foreground">
                   {user.name}
                 </h2>
-                <p className="text-gray-500">@{user.userName}</p>
+                <p className="text-gray-500 dark:text-muted-foreground">
+                  @{user.userName}
+                </p>
               </div>
             </div>
 
@@ -104,7 +114,7 @@ const ProfilePage = () => {
                   value={isEditing ? formData.name : user.name}
                   onChange={(e) => handleInputChange("name", e.target.value)}
                   disabled={!isEditing}
-                  className={!isEditing ? "bg-gray-50" : ""}
+                  className={!isEditing ? "bg-gray-50 dark:bg-muted" : ""}
                 />
               </div>
 
@@ -117,7 +127,7 @@ const ProfilePage = () => {
                     handleInputChange("userName", e.target.value)
                   }
                   disabled={!isEditing}
-                  className={!isEditing ? "bg-gray-50" : ""}
+                  className={!isEditing ? "bg-gray-50 dark:bg-muted" : ""}
                 />
               </div>
 
@@ -129,7 +139,7 @@ const ProfilePage = () => {
                   value={isEditing ? formData.email : user.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
                   disabled={!isEditing}
-                  className={!isEditing ? "bg-gray-50" : ""}
+                  className={!isEditing ? "bg-gray-50 dark:bg-muted" : ""}
                 />
               </div>
             </div>
@@ -167,23 +177,27 @@ const ProfilePage = () => {
         </Card>
 
         {/* Stats Card */}
-        <Card>
+        <Card className="shadow-sm dark:border-border">
           <CardHeader>
-            <CardTitle>Statistics</CardTitle>
+            <CardTitle className="text-foreground">Statistics</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-4 text-center">
-              <div className="p-4 bg-blue-50 rounded-lg">
-                <div className="text-2xl font-bold text-blue-600">
+              <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-100 dark:border-blue-800/20">
+                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                   {user.chats?.length || 0}
                 </div>
-                <div className="text-sm text-gray-600">Chats</div>
+                <div className="text-sm text-gray-600 dark:text-muted-foreground">
+                  Chats
+                </div>
               </div>
-              <div className="p-4 bg-green-50 rounded-lg">
-                <div className="text-2xl font-bold text-green-600">
+              <div className="p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-100 dark:border-green-800/20">
+                <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                   {user.friends?.length || 0}
                 </div>
-                <div className="text-sm text-gray-600">Friends</div>
+                <div className="text-sm text-gray-600 dark:text-muted-foreground">
+                  Friends
+                </div>
               </div>
             </div>
           </CardContent>

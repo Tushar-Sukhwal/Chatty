@@ -39,7 +39,7 @@ export default function DashboardPage() {
   }, [activeChat]);
 
   return (
-    <div className="flex w-full h-screen overflow-hidden">
+    <div className="flex w-full h-screen overflow-hidden bg-background">
       {/* Mobile: Show sidebar or chat based on state */}
       <div className="md:hidden w-full h-full flex flex-col">
         {!showMobileChat || !activeChat ? (
@@ -47,7 +47,7 @@ export default function DashboardPage() {
         ) : (
           <>
             {/* Mobile Chat Header - Fixed height with proper spacing */}
-            <div className="flex-shrink-0 h-16 bg-white border-b border-gray-200 flex items-center px-4 min-h-[4rem]">
+            <div className="flex-shrink-0 h-16 bg-white dark:bg-card border-b border-gray-200 dark:border-border flex items-center px-4 min-h-[4rem]">
               <Button
                 variant="ghost"
                 size="sm"
@@ -57,7 +57,7 @@ export default function DashboardPage() {
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <div className="flex-1 min-w-0">
-                <span className="font-medium text-gray-900 truncate block">
+                <span className="font-medium text-gray-900 dark:text-foreground truncate block">
                   {activeChatName || "Chat"}
                 </span>
               </div>
@@ -74,7 +74,7 @@ export default function DashboardPage() {
       {/* Desktop: Show both sidebar and chat */}
       <div className="hidden md:flex w-full">
         {/* Sidebar */}
-        <div className="w-80 lg:w-96 flex-shrink-0 border-r border-gray-200">
+        <div className="w-80 lg:w-96 flex-shrink-0 border-r border-gray-200 dark:border-border">
           <Sidebar />
         </div>
 

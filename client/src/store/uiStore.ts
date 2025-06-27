@@ -7,10 +7,13 @@ interface UiStore {
   isAddFriendModalOpen: boolean;
   isCreateChatModalOpen: boolean;
   isChatAreaInfoModalOpen: boolean;
+  isDarkMode: boolean;
   setIsSidebarOpen: (isSidebarOpen: boolean) => void;
   setIsAddFriendModalOpen: (isAddFriendModalOpen: boolean) => void;
   setIsCreateChatModalOpen: (isCreateChatModalOpen: boolean) => void;
   setIsChatAreaInfoModalOpen: (isChatAreaInfoModalOpen: boolean) => void;
+  setIsDarkMode: (isDarkMode: boolean) => void;
+  toggleDarkMode: () => void;
 }
 
 export const useUiStore = create<UiStore>()(
@@ -21,6 +24,7 @@ export const useUiStore = create<UiStore>()(
         isAddFriendModalOpen: false,
         isCreateChatModalOpen: false,
         isChatAreaInfoModalOpen: false,
+        isDarkMode: false,
         setIsSidebarOpen: (isSidebarOpen: boolean) => set({ isSidebarOpen }),
         setIsAddFriendModalOpen: (isAddFriendModalOpen: boolean) =>
           set({ isAddFriendModalOpen }),
@@ -28,6 +32,9 @@ export const useUiStore = create<UiStore>()(
           set({ isCreateChatModalOpen }),
         setIsChatAreaInfoModalOpen: (isChatAreaInfoModalOpen: boolean) =>
           set({ isChatAreaInfoModalOpen }),
+        setIsDarkMode: (isDarkMode: boolean) => set({ isDarkMode }),
+        toggleDarkMode: () =>
+          set((state) => ({ isDarkMode: !state.isDarkMode })),
       }),
       {
         name: "ui-store",
