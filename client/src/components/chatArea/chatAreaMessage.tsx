@@ -16,9 +16,19 @@ import SocketService from "@/services/socketService";
 
 type Props = {
   message: Message;
+  isReplying: boolean;
+  setIsReplying: (isReplying: boolean) => void;
+  replyToMessage: Message | null;
+  setReplyToMessage: (replyToMessage: Message | null) => void;
 };
 
-const ChatAreaMessage = ({ message }: Props) => {
+const ChatAreaMessage = ({
+  message,
+  isReplying,
+  setIsReplying,
+  replyToMessage,
+  setReplyToMessage,
+}: Props) => {
   const { user } = useUserStore();
   const isOwnMessage = message.senderId === user?._id;
   const { activeChat } = useChatStore();

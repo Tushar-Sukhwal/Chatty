@@ -68,6 +68,13 @@ class SocketSingleton {
     });
 
     this.socket.on("newMessage", (message: Message) => {
+      //if the message is from the current user, don't add it to the messages
+      if (
+        message.senderId.toString() ===
+        useUserStore.getState().user?._id.toString()
+      ) {
+        return;
+      }
       useChatStore.setState({
         messages: [...useChatStore.getState().messages, message],
       });

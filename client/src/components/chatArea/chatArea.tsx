@@ -86,6 +86,8 @@ const ChatArea = ({ hideMobileNav = false }: Props) => {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [isUserScrolling, setIsUserScrolling] = useState(false);
+  const [isReplying, setIsReplying] = useState(false);
+  const [replyToMessage, setReplyToMessage] = useState<Message | null>(null); // msg to reply to
 
   // Auto-scroll to bottom when messages change
   const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
@@ -119,9 +121,7 @@ const ChatArea = ({ hideMobileNav = false }: Props) => {
     setTimeout(() => setIsUserScrolling(false), 1000);
   };
 
-  const handleMessageEdit = (messageId: string, content: string) => {
-    
-  };
+  const handleMessageEdit = (messageId: string, content: string) => {};
 
   // Scroll to bottom when messages change (only if user is near bottom or not scrolling)
   useEffect(() => {
@@ -199,6 +199,10 @@ const ChatArea = ({ hideMobileNav = false }: Props) => {
                     <ChatAreaMessage
                       key={message.messageId}
                       message={message}
+                      isReplying={isReplying}
+                      setIsReplying={setIsReplying}
+                      replyToMessage={replyToMessage}
+                      setReplyToMessage={setReplyToMessage}
                     />
                   ))}
                 </div>
@@ -227,7 +231,12 @@ const ChatArea = ({ hideMobileNav = false }: Props) => {
       )}
 
       {/* Footer Input Area */}
-      <ChatAreaFooter />
+      <ChatAreaFooter
+        isReplying={isReplying}
+        setIsReplying={setIsReplying}
+        replyToMessage={replyToMessage}
+        setReplyToMessage={setReplyToMessage}
+      />
     </div>
   );
 };

@@ -5,8 +5,19 @@ import { Input } from "../ui/input";
 import { useChatStore } from "@/store/chatStore";
 import { useUserStore } from "@/store/userStore";
 import SocketService from "@/services/socketService";
+import { Message } from "@/types/types";
 
-const ChatAreaFooter = () => {
+const ChatAreaFooter = ({
+  isReplying,
+  setIsReplying,
+  replyToMessage,
+  setReplyToMessage,
+}: {
+  isReplying: boolean;
+  setIsReplying: (isReplying: boolean) => void;
+  replyToMessage: Message | null;
+  setReplyToMessage: (replyToMessage: Message | null) => void;
+}) => {
   const { activeChat, setMessages, messages } = useChatStore();
   const { user } = useUserStore();
   const [message, setMessage] = useState("");

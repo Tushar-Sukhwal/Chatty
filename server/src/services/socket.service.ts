@@ -24,13 +24,10 @@ const handleConnection = async (socket: Socket) => {
     socket.emit("error", "User not found");
     return;
   }
-  const friends = user.friends;
-  //send online status to all friends
-  friends.forEach(async (friend) => {
-    const friendSocketId = await RedisService.getSocketIdFromMongoId(friend);
-    if (friendSocketId) {
-      socket.to(friendSocketId).emit("online", mongoId);
-    }
+
+  user.chats.forEach(async (chat) => {
+    await socket.join(chat.toString());
+    socket.to(chat.toString()).emit("online", mongoId);
   });
 };
 
@@ -44,13 +41,9 @@ const handleDisconnect = async (socket: Socket) => {
     socket.emit("error", "User not found");
     return;
   }
-  const friends = user.friends;
-  //send offline status to all friends
-  friends.forEach(async (friend) => {
-    const friendSocketId = await RedisService.getSocketIdFromMongoId(friend);
-    if (friendSocketId) {
-      socket.to(friendSocketId).emit("offline", mongoId);
-    }
+  user.chats.forEach(async (chat) => {
+    socket.to(chat.toString()).emit("offline", mongoId);
+    await socket.leave(chat.toString());
   });
 };
 
@@ -93,29 +86,8 @@ const handleSendMessage = async (
   // Respond with the messageId
 
   const chatId = data.chatId;
-  const chat = await Chat.findById(chatId);
 
-  // Notify all participants except the sender
-  chat?.participants.forEach(async (participant) => {
-    if (participant.user.toString() !== data.senderId.toString()) {
-      const participantSocketId = await RedisService.getSocketIdFromMongoId(
-        participant.user
-      );
-      if (participantSocketId) {
-        socket
-          .to(participantSocketId)
-          .emit("newMessage", data, (deliveryStatus: boolean) => {
-            // If delivered and chat is direct, notify sender
-            if (deliveryStatus && chat?.type === "direct") {
-              socket.emit("delivered", {
-                messageId: data.messageId,
-                chatId: chatId,
-              });
-            }
-          });
-      }
-    }
-  });
+  socket.to(chatId.toString()).emit("newMessage", data);
   callback(messageId);
 };
 
@@ -163,14 +135,19 @@ const handleAddChat = async (
     //enter into db
     const newChat = await Chat.create(data);
     //notify all participants except the sender
+
+    //join all participants in the chat including the sender
     newChat.participants.forEach(async (participant) => {
       const participantSocketId = await RedisService.getSocketIdFromMongoId(
         participant.user
       );
       if (participantSocketId) {
-        socket.to(participantSocketId).emit("updateAddChat", newChat);
+        io.in(participantSocketId).socketsJoin(newChat._id.toString());
       }
     });
+
+    socket.to(newChat._id.toString()).emit("updateAddChat", newChat);
+
     callback(JSON.stringify(newChat));
   }
 };
@@ -220,18 +197,7 @@ const handleEditMessage = async (
     })
   );
 
-  //notify all participants except the sender
-  const chat = await Chat.findById(message.chatId);
-  chat?.participants.forEach(async (participant) => {
-    if (participant.user.toString() !== user.toString()) {
-      const participantSocketId = await RedisService.getSocketIdFromMongoId(
-        participant.user
-      );
-      if (participantSocketId) {
-        socket.to(participantSocketId).emit("updateEditMessage", message);
-      }
-    }
-  });
+  socket.to(message.chatId.toString()).emit("updateEditMessage", message);
 };
 
 export const initializeSocket = (server: Server) => {
