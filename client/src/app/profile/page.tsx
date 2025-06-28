@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useUserStore } from "@/store/userStore";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -8,24 +8,125 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowLeft, Camera, Save } from "lucide-react";
+import {
+  ArrowLeft,
+  Camera,
+  Save,
+  Upload,
+  Check,
+  X,
+  Loader2,
+} from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { UserApi } from "@/api/userApi";
+import { toast } from "sonner";
+import useDebounce from "@/hooks/useDebounce";
 
 const ProfilePage = () => {
-  const { user } = useUserStore();
+  const { user, setUser } = useUserStore();
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [usernameStatus, setUsernameStatus] = useState<{
+    checking: boolean;
+    available: boolean | null;
+    message: string;
+  }>({
+    checking: false,
+    available: null,
+    message: "",
+  });
+
   const [formData, setFormData] = useState({
     name: user?.name || "",
     userName: user?.userName || "",
     email: user?.email || "",
   });
 
-  const handleSave = () => {
-    // TODO: Implement profile update API call
-    console.log("Saving profile:", formData);
-    setIsEditing(false);
+  const debouncedUsername = useDebounce(formData.userName, 500);
+
+  // Check username availability when debounced username changes
+  useEffect(() => {
+    if (
+      isEditing &&
+      debouncedUsername &&
+      debouncedUsername !== user?.userName &&
+      debouncedUsername.length >= 3
+    ) {
+      checkUsernameAvailability(debouncedUsername);
+    } else if (debouncedUsername === user?.userName) {
+      setUsernameStatus({
+        checking: false,
+        available: true,
+        message: "This is your current username",
+      });
+    } else if (debouncedUsername.length < 3 && debouncedUsername.length > 0) {
+      setUsernameStatus({
+        checking: false,
+        available: false,
+        message: "Username must be at least 3 characters",
+      });
+    } else {
+      setUsernameStatus({
+        checking: false,
+        available: null,
+        message: "",
+      });
+    }
+  }, [debouncedUsername, isEditing, user?.userName]);
+
+  const checkUsernameAvailability = async (username: string) => {
+    setUsernameStatus((prev) => ({ ...prev, checking: true }));
+    try {
+      const result = await UserApi.checkUsernameAvailability(username);
+      setUsernameStatus({
+        checking: false,
+        available: result.available,
+        message: result.message,
+      });
+    } catch (error) {
+      setUsernameStatus({
+        checking: false,
+        available: false,
+        message: "Error checking username availability",
+      });
+    }
+  };
+
+  const handleSave = async () => {
+    if (!formData.name.trim() || !formData.userName.trim()) {
+      toast.error("Name and username are required");
+      return;
+    }
+
+    if (formData.userName.length < 3) {
+      toast.error("Username must be at least 3 characters");
+      return;
+    }
+
+    if (usernameStatus.available === false) {
+      toast.error("Please choose an available username");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const updatedUser = await UserApi.updateProfile({
+        name: formData.name,
+        userName: formData.userName,
+      });
+      setUser(updatedUser);
+      setIsEditing(false);
+      toast.success("Profile updated successfully");
+    } catch (error) {
+      console.error("Failed to update profile:", error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -33,6 +134,64 @@ const ProfilePage = () => {
       ...prev,
       [field]: value,
     }));
+  };
+
+  const handleAvatarUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+
+    // Validate file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image size should be less than 5MB");
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+    try {
+      const avatarUrl = await UserApi.uploadAvatar(file);
+      if (user) {
+        const updatedUser = { ...user, avatar: avatarUrl };
+        setUser(updatedUser);
+        toast.success("Avatar updated successfully");
+      }
+    } catch (error) {
+      console.error("Failed to upload avatar:", error);
+    } finally {
+      setIsUploadingAvatar(false);
+      // Reset the file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const getUsernameStatusIcon = () => {
+    if (usernameStatus.checking) {
+      return <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />;
+    }
+    if (usernameStatus.available === true) {
+      return <Check className="h-4 w-4 text-green-500" />;
+    }
+    if (usernameStatus.available === false) {
+      return <X className="h-4 w-4 text-red-500" />;
+    }
+    return null;
+  };
+
+  const getUsernameStatusColor = () => {
+    if (usernameStatus.available === true)
+      return "text-green-600 dark:text-green-400";
+    if (usernameStatus.available === false)
+      return "text-red-600 dark:text-red-400";
+    return "text-muted-foreground";
   };
 
   if (!user) {
@@ -85,13 +244,22 @@ const ProfilePage = () => {
                   size="icon"
                   variant="secondary"
                   className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full shadow-sm"
-                  onClick={() => {
-                    // TODO: Implement avatar upload
-                    console.log("Upload avatar");
-                  }}
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploadingAvatar}
                 >
-                  <Camera className="h-4 w-4" />
+                  {isUploadingAvatar ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Camera className="h-4 w-4" />
+                  )}
                 </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarUpload}
+                  className="hidden"
+                />
               </div>
               <div>
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-foreground">
@@ -120,15 +288,29 @@ const ProfilePage = () => {
 
               <div className="grid gap-2">
                 <Label htmlFor="userName">Username</Label>
-                <Input
-                  id="userName"
-                  value={isEditing ? formData.userName : user.userName}
-                  onChange={(e) =>
-                    handleInputChange("userName", e.target.value)
-                  }
-                  disabled={!isEditing}
-                  className={!isEditing ? "bg-gray-50 dark:bg-muted" : ""}
-                />
+                <div className="relative">
+                  <Input
+                    id="userName"
+                    value={isEditing ? formData.userName : user.userName}
+                    onChange={(e) =>
+                      handleInputChange("userName", e.target.value)
+                    }
+                    disabled={!isEditing}
+                    className={`${
+                      !isEditing ? "bg-gray-50 dark:bg-muted" : ""
+                    } ${isEditing ? "pr-10" : ""}`}
+                  />
+                  {isEditing && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      {getUsernameStatusIcon()}
+                    </div>
+                  )}
+                </div>
+                {isEditing && usernameStatus.message && (
+                  <p className={`text-sm ${getUsernameStatusColor()}`}>
+                    {usernameStatus.message}
+                  </p>
+                )}
               </div>
 
               <div className="grid gap-2">
@@ -136,11 +318,13 @@ const ProfilePage = () => {
                 <Input
                   id="email"
                   type="email"
-                  value={isEditing ? formData.email : user.email}
-                  onChange={(e) => handleInputChange("email", e.target.value)}
-                  disabled={!isEditing}
-                  className={!isEditing ? "bg-gray-50 dark:bg-muted" : ""}
+                  value={user.email}
+                  disabled={true}
+                  className="bg-gray-50 dark:bg-muted cursor-not-allowed"
                 />
+                <p className="text-xs text-muted-foreground">
+                  Email cannot be changed
+                </p>
               </div>
             </div>
 
@@ -151,9 +335,14 @@ const ProfilePage = () => {
                   <Button
                     onClick={handleSave}
                     className="flex items-center gap-2"
+                    disabled={isSaving || usernameStatus.available === false}
                   >
-                    <Save className="h-4 w-4" />
-                    Save Changes
+                    {isSaving ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Save className="h-4 w-4" />
+                    )}
+                    {isSaving ? "Saving..." : "Save Changes"}
                   </Button>
                   <Button
                     variant="outline"
@@ -164,7 +353,13 @@ const ProfilePage = () => {
                         userName: user.userName || "",
                         email: user.email || "",
                       });
+                      setUsernameStatus({
+                        checking: false,
+                        available: null,
+                        message: "",
+                      });
                     }}
+                    disabled={isSaving}
                   >
                     Cancel
                   </Button>

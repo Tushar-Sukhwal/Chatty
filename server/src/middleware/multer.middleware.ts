@@ -82,6 +82,9 @@ export const uploadSingle = upload.single("file");
 // Middleware for multiple files upload
 export const uploadMultiple = upload.array("files", 5); // Max 5 files
 
+// Export the upload instance for custom usage
+export { upload };
+
 // Error handling middleware
 export const handleMulterError = (err: any, req: any, res: any, next: any) => {
   if (err instanceof multer.MulterError) {

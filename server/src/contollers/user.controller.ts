@@ -4,6 +4,7 @@ import { emailSchema } from "../validation/auth.validation";
 import Chat from "../models/Chat.model";
 import { io } from "..";
 import { RedisService } from "../services/redis.service";
+import cloudinaryUtils from "../utils/cloudinary";
 
 export class UserController {
   static async getMe(req: Request, res: Response) {
@@ -158,5 +159,171 @@ export class UserController {
       message: "Online users fetched successfully",
       data: onlineUsers,
     });
+  }
+
+  static async updateProfile(req: Request, res: Response) {
+    try {
+      const emailResult = emailSchema.safeParse(req.user?.email);
+      if (!emailResult.success) {
+        res.status(400).json({ message: "Invalid email address" });
+        return;
+      }
+
+      const email = emailResult.data;
+      const user = await User.findOne({ email });
+      if (!user) {
+        res.status(404).json({ message: "User not found" });
+        return;
+      }
+
+      const { name, userName, avatar } = req.body;
+
+      // Validate input
+      if (!name || !userName) {
+        res.status(400).json({ message: "Name and username are required" });
+        return;
+      }
+
+      // Check if username is being changed and if it's already taken by another user
+      if (userName !== user.userName) {
+        const existingUser = await User.findOne({
+          userName,
+          _id: { $ne: user._id },
+        });
+        if (existingUser) {
+          res.status(400).json({ message: "Username is already taken" });
+          return;
+        }
+      }
+
+      // Update user fields
+      user.name = name;
+      user.userName = userName;
+      if (avatar) {
+        user.avatar = avatar;
+      }
+
+      await user.save();
+      await (await user.populate("friends")).populate("chats");
+      await user.populate("chats.participants.user");
+
+      
+
+      res.status(200).json({
+        message: "Profile updated successfully",
+        data: user,
+      });
+    } catch (error) {
+      console.error("Profile update error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+
+  static async checkUsernameAvailability(req: Request, res: Response) {
+    try {
+      const { userName } = req.params;
+      const emailResult = emailSchema.safeParse(req.user?.email);
+
+      if (!emailResult.success) {
+        res.status(400).json({ message: "Invalid email address" });
+        return;
+      }
+
+      const email = emailResult.data;
+      const currentUser = await User.findOne({ email });
+      if (!currentUser) {
+        res.status(404).json({ message: "User not found" });
+        return;
+      }
+
+      // Check if username is the same as current user's username
+      if (userName === currentUser.userName) {
+        res.status(200).json({
+          available: true,
+          message: "This is your current username",
+        });
+        return;
+      }
+
+      // Check if username exists for another user
+      const existingUser = await User.findOne({
+        userName,
+        _id: { $ne: currentUser._id },
+      });
+
+      res.status(200).json({
+        available: !existingUser,
+        message: existingUser
+          ? "Username is already taken"
+          : "Username is available",
+      });
+    } catch (error) {
+      console.error("Username availability check error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+
+  static async uploadAvatar(req: Request, res: Response) {
+    try {
+      if (!req.file) {
+        res.status(400).json({ error: "No file uploaded" });
+        return;
+      }
+
+      const emailResult = emailSchema.safeParse(req.user?.email);
+      if (!emailResult.success) {
+        res.status(400).json({ message: "Invalid email address" });
+        return;
+      }
+
+      const email = emailResult.data;
+      const user = await User.findOne({ email });
+      if (!user) {
+        res.status(404).json({ message: "User not found" });
+        return;
+      }
+
+      // Upload file to Cloudinary in avatars folder
+      const cloudinaryResponse = await cloudinaryUtils.uploadOnCloudinary(
+        req.file.path,
+        "chatty-avatars"
+      );
+
+      if (!cloudinaryResponse) {
+        res
+          .status(500)
+          .json({ error: "Failed to upload avatar to cloud storage" });
+        return;
+      }
+
+      // Delete old avatar from cloudinary if it exists
+      if (user.avatar && user.avatar.includes("cloudinary")) {
+        const publicId = user.avatar.split("/").pop()?.split(".")[0];
+        if (publicId) {
+          await cloudinaryUtils.deleteFromCloudinary(
+            `chatty-avatars/${publicId}`
+          );
+        }
+      }
+
+      // Update user avatar
+      user.avatar = cloudinaryResponse.secure_url;
+      await user.save();
+
+
+
+
+      res.status(200).json({
+        message: "Avatar uploaded successfully",
+        data: {
+          avatar: cloudinaryResponse.secure_url,
+        },
+      });
+    } catch (error) {
+      console.error("Avatar upload error:", error);
+      res
+        .status(500)
+        .json({ error: "Internal server error during avatar upload" });
+    }
   }
 }

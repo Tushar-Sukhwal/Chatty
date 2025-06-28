@@ -99,7 +99,7 @@ export class ChatController {
       data: chat,
     });
 
-    io.emit("triggerChatUpdate", {});
+    io.to(chat._id.toString()).emit("triggerChatUpdate", {});
 
     return;
   }

@@ -14,7 +14,8 @@ import { ArrowLeft } from "lucide-react";
 
 export default function DashboardPage() {
   const socket = SocketSingleton.getInstance();
-  const { activeChat, activeChatName } = useChatStore();
+  const { activeChat, activeChatName, setActiveChat, setActiveChatName } =
+    useChatStore();
   const [showMobileChat, setShowMobileChat] = useState(false);
 
   socket.connect();
@@ -51,7 +52,11 @@ export default function DashboardPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setShowMobileChat(false)}
+                onClick={() => {
+                  setShowMobileChat(false);
+                  setActiveChat(null);
+                  setActiveChatName(null);
+                }}
                 className="mr-3 flex-shrink-0 h-10 w-10 p-0"
               >
                 <ArrowLeft className="h-5 w-5" />

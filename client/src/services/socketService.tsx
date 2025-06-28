@@ -5,6 +5,7 @@ import { Message, User } from "@/types/types";
 import { io, Socket } from "socket.io-client";
 import { UserApi } from "@/api/userApi";
 import { toast } from "sonner";
+import { NotificationUtils } from "@/lib/notificationUtils";
 
 class SocketSingleton {
   private static instance: SocketSingleton;
@@ -32,6 +33,9 @@ class SocketSingleton {
     });
 
     this.setupEventListeners();
+
+    // Preload notification sound for better performance
+    NotificationUtils.preloadNotificationSound();
   }
 
   public static getInstance(): SocketSingleton {
@@ -75,6 +79,17 @@ class SocketSingleton {
       ) {
         return;
       }
+
+      // Play notification chime for new messages from other users
+      // But only if the message is NOT from the currently active chat
+      const activeChat = useChatStore.getState().activeChat;
+      const isFromActiveChat =
+        activeChat && message.chatId.toString() === activeChat._id.toString();
+
+      if (!isFromActiveChat) {
+        NotificationUtils.playNotificationChimeIfUnfocused(0.6);
+      }
+
       useChatStore.setState({
         messages: [...useChatStore.getState().messages, message],
       });
