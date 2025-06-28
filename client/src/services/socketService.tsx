@@ -17,8 +17,7 @@ class SocketSingleton {
   private constructor() {
     const socketEndpoint = process.env.NEXT_PUBLIC_API_URL;
     console.log("socketEndpoint", socketEndpoint);
-    const user =
-      typeof window !== "undefined" ? localStorage.getItem("user-store") : null;
+    const user = localStorage.getItem("user-store");
     const token = user ? JSON.parse(user).state.socketToken : null;
     this.socket = io(socketEndpoint, {
       autoConnect: false,
@@ -81,11 +80,8 @@ class SocketSingleton {
         return;
       }
 
-      this.socket.emit("messageStatusUpdate", {
-        messageId: message.messageId,
-        status: "delivered",
-      });
-
+      // Play notification chime for new messages from other users
+      // But only if the message is NOT from the currently active chat
       const activeChat = useChatStore.getState().activeChat;
       const isFromActiveChat =
         activeChat && message.chatId.toString() === activeChat._id.toString();
@@ -129,17 +125,6 @@ class SocketSingleton {
 
     this.socket.on("updateDeleteMessage", (message: Message) => {
       console.log("Message deleted:", message);
-      useChatStore.setState({
-        messages: useChatStore
-          .getState()
-          .messages.map((m) =>
-            m.messageId === message.messageId ? message : m
-          ),
-      });
-    });
-
-    this.socket.on("messageStatusUpdate", (message: Message) => {
-      console.log("Message status updated:", message);
       useChatStore.setState({
         messages: useChatStore
           .getState()
@@ -241,16 +226,6 @@ class SocketSingleton {
         }
       });
     });
-  }
-
-  public updateMessageStatus(messageId: string, status: string) {
-    this.socket.emit(
-      "messageStatusUpdate",
-      { messageId, status },
-      (response: any) => {
-        console.log("Update message status response:", response);
-      }
-    );
   }
 }
 
