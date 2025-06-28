@@ -12,6 +12,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import SocketService from "@/services/socketService";
 
 type Props = {
@@ -44,6 +54,7 @@ const ChatAreaMessage = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(message.content);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const socketService = SocketService.getInstance();
 
@@ -64,16 +75,20 @@ const ChatAreaMessage = ({
 
   const senderName = getSenderName();
 
-  // Handle double click to reply
+  // Handle double click to reply (only for non-deleted messages)
   const handleDoubleClick = () => {
-    setReplyToMessage(message);
-    setIsReplying(true);
+    if (!message.deletedForEveryone) {
+      setReplyToMessage(message);
+      setIsReplying(true);
+    }
   };
 
-  // Handle reply action from dropdown
+  // Handle reply action from dropdown (only for non-deleted messages)
   const handleReply = () => {
-    setReplyToMessage(message);
-    setIsReplying(true);
+    if (!message.deletedForEveryone) {
+      setReplyToMessage(message);
+      setIsReplying(true);
+    }
     setIsDropdownOpen(false);
   };
 
@@ -123,8 +138,21 @@ const ChatAreaMessage = ({
   };
 
   const handleMessageDelete = () => {
-    // TODO: Implement delete functionality
     setIsDropdownOpen(false);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmMessageDelete = async () => {
+    if (message.messageId) {
+      try {
+        await socketService.deleteMessage(message.messageId);
+        setShowDeleteDialog(false);
+      } catch (error) {
+        console.error("Failed to delete message:", error);
+        // You could show a toast notification here
+        setShowDeleteDialog(false);
+      }
+    }
   };
 
   // Format timestamp like WhatsApp
@@ -202,7 +230,9 @@ const ChatAreaMessage = ({
                 </span>
               </div>
               <p className="text-xs text-gray-600 dark:text-muted-foreground line-clamp-2">
-                {originalMessage.content}
+                {originalMessage.deletedForEveryone
+                  ? "🗑️ This message was deleted"
+                  : originalMessage.content}
               </p>
             </div>
           )}
@@ -243,52 +273,62 @@ const ChatAreaMessage = ({
             /* Normal message display */
             <div className="flex items-end gap-2">
               <div className="flex-1 min-w-0">
-                <p className="text-sm leading-relaxed whitespace-pre-wrap break-words break-all overflow-wrap-anywhere">
-                  {message.content}
-                </p>
-                {message.isEdited && (
-                  <span className="text-xs text-gray-500 dark:text-muted-foreground italic">
-                    edited
-                  </span>
+                {message.deletedForEveryone ? (
+                  <p className="text-sm leading-relaxed italic text-gray-500 dark:text-muted-foreground">
+                    🗑️ This message was deleted
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap break-words break-all overflow-wrap-anywhere">
+                      {message.content}
+                    </p>
+                    {message.isEdited && (
+                      <span className="text-xs text-gray-500 dark:text-muted-foreground italic">
+                        edited
+                      </span>
+                    )}
+                  </>
                 )}
               </div>
 
-              {/* Message actions dropdown */}
-              <DropdownMenu
-                open={isDropdownOpen}
-                onOpenChange={setIsDropdownOpen}
-              >
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 text-gray-500 hover:text-gray-700 dark:text-muted-foreground dark:hover:text-foreground"
-                  >
-                    <MoreVertical className="h-3 w-3" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-32">
-                  <DropdownMenuItem onClick={handleReply}>
-                    <Reply className="h-3 w-3 mr-2" />
-                    Reply
-                  </DropdownMenuItem>
-                  {isOwnMessage && (
-                    <>
-                      <DropdownMenuItem onClick={handleMessageEdit}>
-                        <Edit2 className="h-3 w-3 mr-2" />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={handleMessageDelete}
-                        className="text-red-600 dark:text-red-400"
-                      >
-                        <Trash2 className="h-3 w-3 mr-2" />
-                        Delete
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {/* Message actions dropdown - only show for non-deleted messages */}
+              {!message.deletedForEveryone && (
+                <DropdownMenu
+                  open={isDropdownOpen}
+                  onOpenChange={setIsDropdownOpen}
+                >
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 text-gray-500 hover:text-gray-700 dark:text-muted-foreground dark:hover:text-foreground"
+                    >
+                      <MoreVertical className="h-3 w-3" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-32">
+                    <DropdownMenuItem onClick={handleReply}>
+                      <Reply className="h-3 w-3 mr-2" />
+                      Reply
+                    </DropdownMenuItem>
+                    {isOwnMessage && (
+                      <>
+                        <DropdownMenuItem onClick={handleMessageEdit}>
+                          <Edit2 className="h-3 w-3 mr-2" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={handleMessageDelete}
+                          className="text-red-600 dark:text-red-400"
+                        >
+                          <Trash2 className="h-3 w-3 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
             </div>
           )}
 
@@ -316,6 +356,40 @@ const ChatAreaMessage = ({
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader className="space-y-4">
+            <div className="flex items-center justify-center w-16 h-16 mx-auto bg-red-100 dark:bg-red-900/20 rounded-full">
+              <Trash2 className="w-8 h-8 text-red-600 dark:text-red-400" />
+            </div>
+            <AlertDialogTitle className="text-center text-xl font-semibold text-gray-900 dark:text-foreground">
+              Delete Message
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-gray-600 dark:text-muted-foreground leading-relaxed">
+              Are you sure you want to delete this message?
+              <br />
+              <span className="font-medium text-gray-800 dark:text-foreground">
+                This action cannot be undone and the message will be deleted for
+                everyone.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-3 pt-6">
+            <AlertDialogCancel className="flex-1 bg-gray-100 hover:bg-gray-200 dark:bg-muted dark:hover:bg-muted/80 border-0">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmMessageDelete}
+              className="flex-1 bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 text-white dark:text-white border-0 font-medium [&>*]:text-white"
+            >
+              <Trash2 className="w-4 h-4 mr-2 text-white" />
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

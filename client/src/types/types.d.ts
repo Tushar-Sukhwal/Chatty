@@ -30,4 +30,5 @@ export interface Message {
   createdAt?: Date;
   isEdited?: boolean;
   replyTo?: string; //message id
+  deletedForEveryone?: boolean;
 }

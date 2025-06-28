@@ -20,7 +20,7 @@ const MessageSchema = new Schema<IMessageDocument>(
     },
     content: {
       type: String,
-      required: true,
+      default: "",
     },
     type: {
       type: String,

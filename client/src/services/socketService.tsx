@@ -107,6 +107,17 @@ class SocketSingleton {
           ),
       });
     });
+
+    this.socket.on("updateDeleteMessage", (message: Message) => {
+      console.log("Message deleted:", message);
+      useChatStore.setState({
+        messages: useChatStore
+          .getState()
+          .messages.map((m) =>
+            m.messageId === message.messageId ? message : m
+          ),
+      });
+    });
   }
 
   public connect(): void {
@@ -165,6 +176,29 @@ class SocketSingleton {
   public openChat(chatId: string) {
     this.socket.emit("openChat", chatId, (response: any) => {
       console.log("ret", response);
+    });
+  }
+
+  public deleteMessage(messageId: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      this.socket.emit("deleteMessage", { messageId }, (response: any) => {
+        console.log("Delete message response:", response);
+        if (response === "Message deleted successfully") {
+          // Update the local state to show the message as deleted
+          useChatStore.setState({
+            messages: useChatStore
+              .getState()
+              .messages.map((m) =>
+                m.messageId === messageId
+                  ? { ...m, content: "", deletedForEveryone: true }
+                  : m
+              ),
+          });
+          resolve(response);
+        } else {
+          reject(response);
+        }
+      });
     });
   }
 }

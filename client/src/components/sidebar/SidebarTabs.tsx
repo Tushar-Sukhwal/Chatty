@@ -55,7 +55,14 @@ const SidebarTabs = (props: Props) => {
 
   // Format last message for display
   const formatLastMessage = (message: Message) => {
-    if (!message?.content) return "No messages yet";
+    if (!message) return "No messages yet";
+
+    // Handle deleted messages
+    if (message.deletedForEveryone) {
+      return "🗑️ This message was deleted";
+    }
+
+    if (!message.content) return "No messages yet";
 
     // Truncate long messages
     const maxLength = 40;

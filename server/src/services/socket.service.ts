@@ -106,19 +106,22 @@ const handleMessageDelete = async (
   data: IMessageDocument,
   callback: (messageId: string) => void
 ) => {
-  //TODO: add delete message to kafka
-  //TODO: notify all participants except the sender
-  const chat = await Chat.findById(data.chatId);
-  chat?.participants.forEach(async (participant) => {
-    if (participant.user.toString() !== data.senderId.toString()) {
-      const participantSocketId = await RedisService.getSocketIdFromMongoId(
-        participant.user
-      );
-      if (participantSocketId) {
-        socket.to(participantSocketId).emit("updateDeleteMessage", data);
-      }
-    }
-  });
+  const message = await Message.findOne({ messageId: data.messageId });
+  if (!message) {
+    callback("Message not found");
+    return;
+  }
+  //if the sender is the user, delete the message
+  if (message.senderId.toString() !== socket.mongoId!.toString()) {
+    callback("You are not authorized to delete this message");
+    return;
+  }
+  //set the conent to "" and isDeleted to true
+  message.content = "";
+  message.deletedForEveryone = true;
+  await message.save();
+  callback("Message deleted successfully");
+  socket.to(message.chatId.toString()).emit("updateDeleteMessage", message);
 };
 
 const handleAddChat = async (
