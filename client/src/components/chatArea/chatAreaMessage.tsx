@@ -5,7 +5,20 @@ import { cn } from "@/lib/utils";
 import { useChatStore } from "@/store/chatStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Edit2, Check, X, MoreVertical, Trash2, Reply } from "lucide-react";
+import {
+  Edit2,
+  Check,
+  X,
+  MoreVertical,
+  Trash2,
+  Reply,
+  Download,
+  File,
+  Image,
+  Video,
+  Music,
+  FileText,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -49,6 +62,7 @@ const ChatAreaMessage = ({
   const isOwnMessage = message.senderId === user?._id;
   const { activeChat, messages } = useChatStore();
   const isGroupChat = activeChat?.type === "group";
+  const isFileMessage = message.type && message.type !== "text";
 
   // Edit state
   const [isEditing, setIsEditing] = useState(false);
@@ -149,9 +163,105 @@ const ChatAreaMessage = ({
         setShowDeleteDialog(false);
       } catch (error) {
         console.error("Failed to delete message:", error);
-        // You could show a toast notification here
         setShowDeleteDialog(false);
       }
+    }
+  };
+
+  const handleDownloadFile = () => {
+    if (message.file?.url && message.content) {
+      // Use message.content as the original filename for download
+      const filename = message.content;
+
+      const link = document.createElement("a");
+      link.href = message.file.url;
+      link.download = filename;
+      link.target = "_blank";
+      link.style.display = "none";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  };
+
+  const getFileIcon = () => {
+    switch (message.type) {
+      case "image":
+        return <Image className="h-5 w-5" />;
+      case "video":
+        return <Video className="h-5 w-5" />;
+      case "audio":
+        return <Music className="h-5 w-5" />;
+      default:
+        return <FileText className="h-5 w-5" />;
+    }
+  };
+
+  const renderFileContent = () => {
+    if (!message.file || message.deletedForEveryone) return null;
+
+    switch (message.type) {
+      case "image":
+        return (
+          <div className="mt-2">
+            <img
+              src={message.file.url}
+              alt={message.content}
+              className="max-w-xs rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+              onClick={() => window.open(message.file?.url, "_blank")}
+            />
+          </div>
+        );
+
+      case "video":
+        return (
+          <div className="mt-2 max-w-xs">
+            <video controls className="w-full rounded-lg" preload="metadata">
+              <source src={message.file.url} type={message.file.mimeType} />
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        );
+
+      case "audio":
+        return (
+          <div className="mt-2 max-w-xs">
+            <audio controls className="w-full">
+              <source src={message.file.url} type={message.file.mimeType} />
+              Your browser does not support the audio tag.
+            </audio>
+          </div>
+        );
+
+      default:
+        return (
+          <div className="mt-2 p-3 bg-gray-100 dark:bg-muted rounded-lg border max-w-xs">
+            <div className="flex items-center gap-3">
+              {getFileIcon()}
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-gray-500">
+                  {message.file.size && formatFileSize(message.file.size)}
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleDownloadFile}
+                className="h-8 w-8 p-0 flex-shrink-0"
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        );
     }
   };
 
@@ -279,9 +389,16 @@ const ChatAreaMessage = ({
                   </p>
                 ) : (
                   <>
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap break-words break-all overflow-wrap-anywhere">
-                      {message.content}
-                    </p>
+                    {/* Text content - show for all messages that have content */}
+                    {message.content && (
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap break-words break-all overflow-wrap-anywhere">
+                        {message.content}
+                      </p>
+                    )}
+
+                    {/* File content */}
+                    {renderFileContent()}
+
                     {message.isEdited && (
                       <span className="text-xs text-gray-500 dark:text-muted-foreground italic">
                         edited
@@ -311,20 +428,26 @@ const ChatAreaMessage = ({
                       <Reply className="h-3 w-3 mr-2" />
                       Reply
                     </DropdownMenuItem>
+                    {message.file && (
+                      <DropdownMenuItem onClick={handleDownloadFile}>
+                        <Download className="h-3 w-3 mr-2" />
+                        Download
+                      </DropdownMenuItem>
+                    )}
+                    {isOwnMessage && !isFileMessage && (
+                      <DropdownMenuItem onClick={handleMessageEdit}>
+                        <Edit2 className="h-3 w-3 mr-2" />
+                        Edit
+                      </DropdownMenuItem>
+                    )}
                     {isOwnMessage && (
-                      <>
-                        <DropdownMenuItem onClick={handleMessageEdit}>
-                          <Edit2 className="h-3 w-3 mr-2" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={handleMessageDelete}
-                          className="text-red-600 dark:text-red-400"
-                        >
-                          <Trash2 className="h-3 w-3 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </>
+                      <DropdownMenuItem
+                        onClick={handleMessageDelete}
+                        className="text-red-600 dark:text-red-400"
+                      >
+                        <Trash2 className="h-3 w-3 mr-2" />
+                        Delete
+                      </DropdownMenuItem>
                     )}
                   </DropdownMenuContent>
                 </DropdownMenu>

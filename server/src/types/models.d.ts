@@ -23,6 +23,17 @@ export declare interface IMessageDocument extends Document {
   senderId: Schema.Types.ObjectId;
   content: string;
   type: string;
+  // File attachment fields
+  file?: {
+    url?: string;
+    publicId?: string;
+    originalName?: string;
+    size?: number;
+    mimeType?: string;
+    width?: number;
+    height?: number;
+    duration?: number;
+  };
   status: string;
   deletedFor: Schema.Types.ObjectId[];
   deletedForEveryone: boolean;

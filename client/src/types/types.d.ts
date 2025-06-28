@@ -20,6 +20,17 @@ export interface Chat {
   createdAt?: Date;
 }
 
+export interface FileAttachment {
+  url: string;
+  publicId: string;
+  originalName: string;
+  size: number;
+  mimeType: string;
+  width?: number;
+  height?: number;
+  duration?: number;
+}
+
 export interface Message {
   chatId: string;
   messageId: string;
@@ -31,4 +42,6 @@ export interface Message {
   isEdited?: boolean;
   replyTo?: string; //message id
   deletedForEveryone?: boolean;
+  type?: "text" | "image" | "file" | "video" | "audio" | "document";
+  file?: FileAttachment;
 }

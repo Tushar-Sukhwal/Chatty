@@ -71,13 +71,13 @@ const Sidebar = (props: Props) => {
       y: 0,
       scale: 1,
       transition: {
-        type: "spring",
+        type: "spring" as const,
         stiffness: 300,
         damping: 24,
         mass: 0.5,
       },
     },
-  };
+  } as const;
 
   return (
     <div className="flex flex-col h-full bg-gray-50 dark:bg-background">

@@ -24,8 +24,35 @@ const MessageSchema = new Schema<IMessageDocument>(
     },
     type: {
       type: String,
-      enum: ["text", "image", "file"],
+      enum: ["text", "image", "file", "video", "audio", "document"],
       default: "text",
+    },
+    // File attachment fields
+    file: {
+      url: {
+        type: String,
+      },
+      publicId: {
+        type: String,
+      },
+      originalName: {
+        type: String,
+      },
+      size: {
+        type: Number,
+      },
+      mimeType: {
+        type: String,
+      },
+      width: {
+        type: Number,
+      },
+      height: {
+        type: Number,
+      },
+      duration: {
+        type: Number,
+      },
     },
     status: {
       type: String,

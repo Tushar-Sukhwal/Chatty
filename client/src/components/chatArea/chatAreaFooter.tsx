@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "../ui/button";
 import { Smile, Paperclip, Camera, Send, Plus, X, Reply } from "lucide-react";
 import { Textarea } from "../ui/textarea";
@@ -6,6 +6,9 @@ import { useChatStore } from "@/store/chatStore";
 import { useUserStore } from "@/store/userStore";
 import SocketService from "@/services/socketService";
 import { Message } from "@/types/types";
+import FileUpload from "./fileUpload";
+import { FileUploadResponse } from "@/api/messageApi";
+import { toast } from "sonner";
 
 const ChatAreaFooter = ({
   isReplying,
@@ -22,7 +25,11 @@ const ChatAreaFooter = ({
   const { user } = useUserStore();
   const [message, setMessage] = useState("");
   const [showExtraButtons, setShowExtraButtons] = useState(false);
+  const [showFileUpload, setShowFileUpload] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [pastedFile, setPastedFile] = useState<File | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Auto-resize textarea function
   const autoResizeTextarea = () => {
@@ -63,7 +70,88 @@ const ChatAreaFooter = ({
     setReplyToMessage(null);
   };
 
-  // Handle form submit
+  // Handle file upload from drag & drop
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      setPastedFile(files[0]); // Set the dropped file as pasted file
+      setShowFileUpload(true);
+    }
+  }, []);
+
+  // Handle paste event for files
+  const handlePaste = useCallback((e: React.ClipboardEvent) => {
+    const items = Array.from(e.clipboardData.items);
+    const fileItem = items.find((item) => item.kind === "file");
+
+    if (fileItem) {
+      e.preventDefault();
+      const file = fileItem.getAsFile();
+      if (file) {
+        setPastedFile(file);
+        setShowFileUpload(true);
+      }
+    }
+  }, []);
+
+  // Handle file selection from upload modal
+  const handleFileSelect = async (fileData: FileUploadResponse["data"]) => {
+    if (!activeChat || !user) return;
+
+    try {
+      const messagePayload = {
+        content: fileData.file.originalName,
+        chatId: activeChat._id,
+        senderId: user._id,
+        createdAt: new Date(),
+        type: fileData.type as "image" | "video" | "document" | "audio",
+        file: fileData.file,
+        ...(replyToMessage && { replyTo: replyToMessage.messageId }),
+      };
+
+      const messageId = await socketService.sendMessage(messagePayload);
+
+      // Create new message object
+      const newMessage = {
+        messageId: messageId,
+        content: fileData.file.originalName,
+        chatId: activeChat._id,
+        senderId: user._id,
+        createdAt: new Date(),
+        type: fileData.type as "image" | "video" | "document" | "audio",
+        file: fileData.file,
+        ...(replyToMessage && { replyTo: replyToMessage.messageId }),
+      };
+
+      // Add message to the store
+      setMessages([...messages, newMessage]);
+
+      // Clear reply state and close upload modal
+      handleCancelReply();
+      setShowFileUpload(false);
+      setPastedFile(null); // Clear pasted file after successful upload
+
+      toast.success("File sent successfully!");
+    } catch (error) {
+      console.error("Error sending file:", error);
+      toast.error("Failed to send file. Please try again.");
+    }
+  };
+
+  // Handle form submit for text messages
   const handleSendMessage = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (message.trim() === "" || !activeChat || !user) return;
@@ -73,7 +161,8 @@ const ChatAreaFooter = ({
       chatId: activeChat._id,
       senderId: user._id,
       createdAt: new Date(),
-      ...(replyToMessage && { replyTo: replyToMessage.messageId }),
+      type: "text" as const,
+      ...(replyToMessage && { replyToMessageId: replyToMessage.messageId }),
     };
 
     const messageId = await socketService.sendMessage(messagePayload);
@@ -85,6 +174,7 @@ const ChatAreaFooter = ({
       chatId: activeChat._id,
       senderId: user._id,
       createdAt: new Date(),
+      type: "text" as const,
       ...(replyToMessage && { replyTo: replyToMessage.messageId }),
     };
 
@@ -103,8 +193,25 @@ const ChatAreaFooter = ({
     }
   };
 
+  const handleFileButtonClick = () => {
+    setPastedFile(null); // Clear any previously pasted file
+    setShowFileUpload(true);
+  };
+
+  const handleFileUploadCancel = () => {
+    setShowFileUpload(false);
+    setPastedFile(null); // Clear pasted file when modal is closed
+  };
+
   return (
-    <div className="border-t border-gray-200 dark:border-border bg-white dark:bg-card flex-shrink-0">
+    <div
+      className={`border-t border-gray-200 dark:border-border bg-white dark:bg-card flex-shrink-0 ${
+        isDragOver ? "bg-blue-50 dark:bg-blue-900/20 border-blue-500" : ""
+      }`}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
       {/* Reply Preview */}
       {isReplying && replyToMessage && (
         <div className="px-3 py-2 bg-gray-50 dark:bg-muted border-b border-gray-200 dark:border-border">
@@ -145,6 +252,7 @@ const ChatAreaFooter = ({
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyDown={handleKeyDown}
+                onPaste={handlePaste}
                 ref={textareaRef}
               />
               <Button
@@ -175,9 +283,7 @@ const ChatAreaFooter = ({
                 variant="ghost"
                 size="sm"
                 className="text-gray-500 hover:text-gray-700 dark:text-muted-foreground dark:hover:text-foreground h-8"
-                onClick={() => {
-                  /* TODO: Add file attachment */
-                }}
+                onClick={handleFileButtonClick}
               >
                 <Paperclip className="h-4 w-4" />
               </Button>
@@ -210,6 +316,7 @@ const ChatAreaFooter = ({
               variant="ghost"
               size="icon"
               className="text-gray-500 hover:text-gray-700 dark:text-muted-foreground dark:hover:text-foreground"
+              onClick={handleFileButtonClick}
             >
               <Paperclip className="h-5 w-5" />
             </Button>
@@ -221,6 +328,7 @@ const ChatAreaFooter = ({
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={handleKeyDown}
+              onPaste={handlePaste}
               ref={textareaRef}
             />
             <Button
@@ -243,6 +351,25 @@ const ChatAreaFooter = ({
           </div>
         </div>
       </form>
+
+      {/* File Upload Modal */}
+      <FileUpload
+        isOpen={showFileUpload}
+        onFileSelect={handleFileSelect}
+        onCancel={handleFileUploadCancel}
+        preSelectedFile={pastedFile}
+      />
+
+      {/* Drag overlay */}
+      {isDragOver && (
+        <div className="absolute inset-0 bg-blue-500/10 flex items-center justify-center z-10">
+          <div className="bg-white dark:bg-card p-4 rounded-lg shadow-lg">
+            <p className="text-blue-600 dark:text-primary font-medium">
+              Drop files here to upload
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

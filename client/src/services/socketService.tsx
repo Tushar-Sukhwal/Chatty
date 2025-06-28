@@ -138,6 +138,17 @@ class SocketSingleton {
     senderId: string;
     createdAt: Date;
     replyToMessageId?: string;
+    type?: "text" | "image" | "file" | "video" | "audio" | "document";
+    file?: {
+      url: string;
+      publicId: string;
+      originalName: string;
+      size: number;
+      mimeType: string;
+      width?: number;
+      height?: number;
+      duration?: number;
+    };
   }): Promise<string> {
     return new Promise((resolve, reject) => {
       // Prepare the data to send to server, mapping replyToMessageId to replyTo if provided

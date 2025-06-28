@@ -71,6 +71,7 @@ const handleSendMessage = async (
   callback: (messageId: string) => void
 ) => {
   console.log("sendMessage", data);
+
   // Generate uuid4 for messageId
   const messageId = uuidv4();
   data.messageId = messageId;

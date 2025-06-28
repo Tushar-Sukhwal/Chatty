@@ -27,8 +27,6 @@ export const verifyFirebaseToken = async (
       }
     }
 
-    // @ts-ignore
-
     req.user = decodedToken;
     next();
   } catch (error) {
