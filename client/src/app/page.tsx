@@ -9,84 +9,56 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
   MessageCircle,
   Users,
   Shield,
   Zap,
-  Globe,
-  Heart,
-  Star,
   ArrowRight,
   Check,
   Menu,
   X,
+  Cloud,
+  Database,
+  Github as GithubIcon,
 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function ChatAppLanding() {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const { isAuthenticated } = useAuth();
 
   const features = [
     {
-      icon: <MessageCircle className="h-8 w-8 text-blue-600" />,
-      title: "Real-time Messaging",
-      description:
-        "Lightning-fast messages with instant delivery and read receipts.",
+      icon: <Cloud className="h-8 w-8 text-blue-600" />,
+      title: "Scalable Infrastructure",
+      description: "Stateless nodes that scale horizontally on any cloud.",
     },
     {
-      icon: <Users className="h-8 w-8 text-green-600" />,
-      title: "Group Conversations",
-      description:
-        "Create unlimited groups and channels for team collaboration.",
-    },
-    {
-      icon: <Shield className="h-8 w-8 text-purple-600" />,
-      title: "End-to-End Encryption",
-      description:
-        "Your conversations are secure with military-grade encryption.",
+      icon: <Database className="h-8 w-8 text-green-600" />,
+      title: "Redis Presence",
+      description: "Instant online/offline status powered by Redis.",
     },
     {
       icon: <Zap className="h-8 w-8 text-yellow-600" />,
-      title: "Lightning Fast",
-      description:
-        "Optimized performance for seamless communication experience.",
+      title: "Kafka Event Streaming",
+      description: "High-throughput event pipeline using Apache Kafka.",
     },
     {
-      icon: <Globe className="h-8 w-8 text-cyan-600" />,
-      title: "Global Reach",
-      description:
-        "Connect with people worldwide with international infrastructure.",
+      icon: <Shield className="h-8 w-8 text-purple-600" />,
+      title: "Secure Auth",
+      description: "JWT & Firebase secured authentication flow.",
     },
     {
-      icon: <Heart className="h-8 w-8 text-red-600" />,
-      title: "User-Friendly",
-      description: "Intuitive design for users of all technical levels.",
-    },
-  ];
-
-  const testimonials = [
-    {
-      name: "Sarah Chen",
-      role: "Product Manager",
-      content:
-        "This chat app has completely transformed how our team communicates. The interface is beautiful and the features are incredibly powerful.",
-      rating: 5,
+      icon: <GithubIcon className="h-8 w-8 text-black" />,
+      title: "Open-source",
+      description: "Source code available on GitHub – contributions welcome!",
     },
     {
-      name: "Alex Rivera",
-      role: "Software Engineer",
-      content:
-        "The real-time messaging is incredibly fast and reliable. Our development team loves the group features.",
-      rating: 5,
-    },
-    {
-      name: "Maya Patel",
-      role: "Designer",
-      content:
-        "The UI is clean and intuitive. Our clients have been impressed with the professional look and feel.",
-      rating: 5,
+      icon: <Users className="h-8 w-8 text-cyan-600" />,
+      title: "Modern UI",
+      description: "Next.js 15, React 19, Tailwind 4 & shadcn-ui.",
     },
   ];
 
@@ -110,30 +82,37 @@ export default function ChatAppLanding() {
                 Features
               </a>
               <a
-                href="#testimonials"
+                href="https://github.com/Tushar-Sukhwal/Chatty"
+                target="_blank"
                 className="text-gray-600 hover:text-gray-900 transition-colors"
+                rel="noopener noreferrer"
               >
-                Reviews
+                GitHub
               </a>
-              <a
-                href="#pricing"
-                className="text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                Pricing
-              </a>
-              <Button
-                variant="ghost"
-                onClick={() => router.push("/login")}
-                className="text-gray-600 hover:text-gray-900"
-              >
-                Sign In
-              </Button>
-              <Button
-                onClick={() => router.push("/signup")}
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
-              >
-                Get Started
-              </Button>
+              {isAuthenticated ? (
+                <Button
+                  onClick={() => router.push("/dashboard")}
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+                >
+                  Dashboard
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    variant="ghost"
+                    onClick={() => router.push("/login")}
+                    className="text-gray-600 hover:text-gray-900"
+                  >
+                    Sign In
+                  </Button>
+                  <Button
+                    onClick={() => router.push("/signup")}
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+                  >
+                    Get Started
+                  </Button>
+                </>
+              )}
             </div>
 
             {/* Mobile Menu Button */}
@@ -163,30 +142,37 @@ export default function ChatAppLanding() {
                 Features
               </a>
               <a
-                href="#testimonials"
+                href="https://github.com/Tushar-Sukhwal/Chatty"
+                target="_blank"
                 className="block text-gray-600 hover:text-gray-900 transition-colors"
+                rel="noopener noreferrer"
               >
-                Reviews
+                GitHub
               </a>
-              <a
-                href="#pricing"
-                className="block text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                Pricing
-              </a>
-              <Button
-                variant="ghost"
-                onClick={() => router.push("/login")}
-                className="w-full justify-start text-gray-600 hover:text-gray-900"
-              >
-                Sign In
-              </Button>
-              <Button
-                onClick={() => router.push("/signup")}
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white"
-              >
-                Get Started
-              </Button>
+              {isAuthenticated ? (
+                <Button
+                  onClick={() => router.push("/dashboard")}
+                  className="w-full justify-start text-gray-600 hover:text-gray-900"
+                >
+                  Dashboard
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    variant="ghost"
+                    onClick={() => router.push("/login")}
+                    className="w-full justify-start text-gray-600 hover:text-gray-900"
+                  >
+                    Sign In
+                  </Button>
+                  <Button
+                    onClick={() => router.push("/signup")}
+                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white"
+                  >
+                    Get Started
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         )}
@@ -201,10 +187,6 @@ export default function ChatAppLanding() {
         </div>
 
         <div className="max-w-7xl mx-auto text-center relative z-10">
-          <Badge className="mb-8 bg-blue-100 text-blue-800 border-blue-200">
-            ✨ Now with AI-powered features
-          </Badge>
-
           <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-6 animate-fade-in-up">
             Connect, Chat,
             <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
@@ -220,23 +202,49 @@ export default function ChatAppLanding() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in-up animation-delay-600">
-            <Button
-              onClick={() => router.push("/signup")}
-              size="lg"
-              className="group px-8 py-6 text-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white transform hover:scale-105 transition-all duration-200 shadow-lg"
-            >
-              Start Free Trial
-              <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-            </Button>
-
-            <Button
-              onClick={() => router.push("/login")}
-              variant="outline"
-              size="lg"
-              className="px-8 py-6 text-lg border-2 border-gray-300 text-gray-700 hover:bg-gray-50 transition-all duration-200"
-            >
-              Sign In
-            </Button>
+            {isAuthenticated ? (
+              <>
+                <Button
+                  onClick={() => router.push("/dashboard")}
+                  size="lg"
+                  className="group px-8 py-6 text-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white transform hover:scale-105 transition-all duration-200 shadow-lg"
+                >
+                  Go to Dashboard
+                </Button>
+                <Button
+                  onClick={() =>
+                    window.open(
+                      "https://github.com/Tushar-Sukhwal/Chatty",
+                      "_blank"
+                    )
+                  }
+                  variant="outline"
+                  size="lg"
+                  className="px-8 py-6 text-lg border-2 border-gray-300 text-gray-700 hover:bg-gray-50 transition-all duration-200"
+                >
+                  GitHub Repo
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  onClick={() => router.push("/signup")}
+                  size="lg"
+                  className="group px-8 py-6 text-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white transform hover:scale-105 transition-all duration-200 shadow-lg"
+                >
+                  Get Started
+                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </Button>
+                <Button
+                  onClick={() => router.push("/login")}
+                  variant="outline"
+                  size="lg"
+                  className="px-8 py-6 text-lg border-2 border-gray-300 text-gray-700 hover:bg-gray-50 transition-all duration-200"
+                >
+                  Sign In
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Social Proof */}
@@ -286,54 +294,6 @@ export default function ChatAppLanding() {
                   <CardDescription className="text-gray-600 text-base">
                     {feature.description}
                   </CardDescription>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials Section */}
-      <section
-        id="testimonials"
-        className="py-20 px-4 bg-gradient-to-r from-blue-50 to-indigo-50"
-      >
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-              Loved by Thousands
-            </h2>
-            <p className="text-xl text-gray-600">
-              See what our users have to say about their experience
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <Card
-                key={index}
-                className="bg-white/80 border-gray-200 backdrop-blur-sm hover:bg-white hover:shadow-lg transition-all duration-300"
-              >
-                <CardHeader>
-                  <div className="flex items-center space-x-1 mb-4">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className="h-5 w-5 fill-yellow-400 text-yellow-400"
-                      />
-                    ))}
-                  </div>
-                  <CardDescription className="text-gray-600 text-base leading-relaxed">
-                    "{testimonial.content}"
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div>
-                    <p className="text-gray-900 font-semibold">
-                      {testimonial.name}
-                    </p>
-                    <p className="text-gray-500 text-sm">{testimonial.role}</p>
-                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -396,8 +356,25 @@ export default function ChatAppLanding() {
             <span className="text-2xl font-bold text-gray-900">Chatty</span>
           </div>
           <p className="text-gray-600">
-            © 2025 Chatty. All rights reserved. Built with ❤️ for better
-            communication.
+            Made with ❤️ by{" "}
+            <a
+              href="https://tusharsukhwal.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline"
+            >
+              Tushar&nbsp;Sukhwal
+            </a>
+            . Source code on{" "}
+            <a
+              href="https://github.com/Tushar-Sukhwal/Chatty"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline"
+            >
+              GitHub
+            </a>
+            .
           </p>
         </div>
       </footer>
