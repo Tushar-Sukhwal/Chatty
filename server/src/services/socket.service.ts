@@ -10,6 +10,20 @@ import { KafkaService } from "./kafka.service";
 import { v4 as uuidv4 } from "uuid";
 import { Schema } from "mongoose";
 
+/**
+ * Socket Service
+ *
+ * Centralises all Socket.IO real-time logic: connection lifecycle, authentication,
+ * event handlers (send / edit / delete message, add chat, open chat) and room
+ * management. Exported `initializeSocket` mounts the Socket.IO server on the
+ * supplied HTTP server instance and returns the created `io` object.
+ *
+ * Every connected socket gets these custom properties attached in
+ * `SocketAuth.middleware.ts`:
+ *   • `socket.mongoId`   – MongoDB ObjectId of the authenticated user.
+ *   • `socket.userName`  – The userName string.
+ */
+
 export let io: SocketServer;
 
 const handleConnection = async (socket: Socket) => {
@@ -26,7 +40,7 @@ const handleConnection = async (socket: Socket) => {
     return;
   }
 
-  user.chats.forEach(async (chat) => {
+  user.chats.forEach(async chat => {
     await socket.join(chat.toString());
     socket.to(chat.toString()).emit("online", mongoId);
   });
@@ -42,7 +56,7 @@ const handleDisconnect = async (socket: Socket) => {
     socket.emit("error", "User not found");
     return;
   }
-  user.chats.forEach(async (chat) => {
+  user.chats.forEach(async chat => {
     socket.to(chat.toString()).emit("offline", mongoId);
     await socket.leave(chat.toString());
   });
@@ -151,10 +165,8 @@ const handleAddChat = async (
     //notify all participants except the sender
 
     //join all participants in the chat including the sender
-    newChat.participants.forEach(async (participant) => {
-      const participantSocketId = await RedisService.getSocketIdFromMongoId(
-        participant.user
-      );
+    newChat.participants.forEach(async participant => {
+      const participantSocketId = await RedisService.getSocketIdFromMongoId(participant.user);
       if (participantSocketId) {
         io.in(participantSocketId).socketsJoin(newChat._id.toString());
       }

@@ -4,6 +4,12 @@ import { emailSchema } from "../validation/auth.validation";
 import User from "../models/User.model";
 import { io } from "..";
 
+/**
+ * @class ChatController
+ * @description Handles chat discovery and creation operations.
+ *
+ * @remarks All routes are prefixed with `/api/chat`.
+ */
 export class ChatController {
   /**
    * @description getChats is a method that fetches the chats for a user
@@ -32,6 +38,23 @@ export class ChatController {
     });
   }
 
+  /**
+   * @description Create a new group chat for the authenticated user and the provided list of friends.
+   * @route POST /api/chat
+   * @param req Express Request object – expects `chatName: string` and `emails: string[]` in the body.
+   * @param res Express Response object – returns a standard API response with the created chat object.
+   *
+   * @remarks
+   * Validations performed:
+   * 1. The requester must be a valid user (derived from `req.user.email`).
+   * 2. `emails` array must only contain **unique** and **valid** email addresses that belong to existing friends.
+   * 3. `chatName` must be non-empty.
+   *
+   * After successful creation the method:
+   * • Persists the new chat to MongoDB.
+   * • Adds the chat reference to the creator and friend documents.
+   * • Emits a `triggerChatUpdate` Socket.IO event so that connected clients can refresh their UI.
+   */
   static async createChat(req: Request, res: Response) {
     const emails = req.body.emails;
     const chatName = req.body.chatName;

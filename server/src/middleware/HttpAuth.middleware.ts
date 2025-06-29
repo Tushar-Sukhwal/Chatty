@@ -2,6 +2,16 @@ import { NextFunction, Request, Response } from "express";
 import admin from "../config/firebase.config";
 import jwt from "jsonwebtoken";
 
+/**
+ * HTTP Authentication Middleware
+ *
+ * Verifies Authorization header against either:
+ * 1. A JWT issued by this backend (`JWT_SECRET`).
+ * 2. A Firebase ID token (via Firebase Admin SDK).
+ *
+ * On success, attaches the decoded token to `req.user` and calls `next()`.
+ * On failure, returns 401 Unauthorized.
+ */
 export const verifyFirebaseToken = async (
   req: Request,
   res: Response,

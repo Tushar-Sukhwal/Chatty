@@ -1,5 +1,13 @@
 import User from "../models/User.model";
 
+/**
+ * Generates a unique, URL-safe username derived from a user's email address.
+ *
+ * Strategy:
+ *  • Take local-part of the email, strip non-alphanumerics and trim to 12 chars.
+ *  • Append a base-36 timestamp and random suffix for entropy.
+ *  • Retry with incremental numeric suffix (`attempt`) until uniqueness in DB.
+ */
 const userIdHelper = (email: string, attempt: number = 0): string => {
   const username = email
     .split("@")[0]
@@ -12,10 +20,7 @@ const userIdHelper = (email: string, attempt: number = 0): string => {
   const randomSuffix = Math.random().toString(36).substring(2, 5);
   const attemptSuffix = attempt > 0 ? attempt.toString() : "";
 
-  return `${username}${timestamp}${randomSuffix}${attemptSuffix}`.substring(
-    0,
-    20
-  );
+  return `${username}${timestamp}${randomSuffix}${attemptSuffix}`.substring(0, 20);
 };
 
 const generateUserId = async (email: string): Promise<string> => {
@@ -45,9 +50,7 @@ const generateUserId = async (email: string): Promise<string> => {
 
     if (attempts >= maxAttempts) {
       // Final fallback - guaranteed unique with timestamp
-      userId = `user_${Date.now()}_${Math.random()
-        .toString(36)
-        .substring(2, 6)}`;
+      userId = `user_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
       break;
     }
   } while (attempts < maxAttempts);

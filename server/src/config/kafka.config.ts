@@ -1,3 +1,11 @@
+/**
+ * Kafka Configuration
+ *
+ * Provides pre-configured `producer` and `consumer` instances as well as helper
+ * functions to establish connections.
+ *
+ * Topic names are loaded from environment variables where required.
+ */
 // src/config/kafka.config.ts
 import { Kafka, logLevel } from "kafkajs";
 

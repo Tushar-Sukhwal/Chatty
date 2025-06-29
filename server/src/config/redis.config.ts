@@ -11,4 +11,10 @@ if (process.env.NODE_ENV === "production") {
   });
 }
 
+/**
+ * Creates and exports a singleton ioredis client.
+ *
+ * Uses `REDIS_URL` env var in production, otherwise defaults to
+ * localhost:6379 for local development.
+ */
 export default redis;

@@ -1,0 +1,378 @@
+openapi: 3.0.3
+info:
+  title: Chatty API
+  version: 1.0.0
+  description: >-
+    REST API documentation for the Chatty application backend generated and
+    maintained manually. All endpoints are secured using HTTP Bearer tokens
+    (either a Firebase ID token **or** an internally issued JWT).
+
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ApiResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        data:
+          nullable: true
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        userName:
+          type: string
+        email:
+          type: string
+        avatar:
+          type: string
+      required: [_id, name, userName, email]
+    Chat:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum: [direct, group]
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+    Message:
+      type: object
+      properties:
+        _id:
+          type: string
+        chatId:
+          type: string
+        sender:
+          $ref: '#/components/schemas/User'
+        content:
+          type: string
+        type:
+          type: string
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Auth
+    description: Authentication related endpoints
+  - name: User
+    description: User management & profile
+  - name: Chat
+    description: Chat creation & retrieval
+  - name: Message
+    description: Message handling / uploads
+
+paths:
+  /api/auth/signup:
+    post:
+      tags: [Auth]
+      summary: Register a new user in the system
+      security: []   # Sign-up does not require auth header; Firebase token is sent in Authorization header but user does not yet exist.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+              required: [name]
+      responses:
+        '201':
+          description: User successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Validation error or user already exists
+        '500':
+          description: Server error
+
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Log an existing user into the system
+      security: []  # Similar to signup, login uses Firebase token but user is not considered authenticated yet.
+      responses:
+        '200':
+          description: Logged in successfully – returns JWT in response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Invalid credentials / user not found
+
+  /api/chat:
+    get:
+      tags: [Chat]
+      summary: Fetch all chats of the authenticated user
+      responses:
+        '200':
+          description: A list of chats
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    post:
+      tags: [Chat]
+      summary: Create a new group chat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                chatName:
+                  type: string
+                emails:
+                  type: array
+                  items:
+                    type: string
+              required: [chatName, emails]
+      responses:
+        '200':
+          description: Chat created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/message:
+    get:
+      tags: [Message]
+      summary: Return all messages for the authenticated user's chats
+      responses:
+        '200':
+          description: Messages fetched successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/message/upload:
+    post:
+      tags: [Message]
+      summary: Upload a file (image/audio/video/etc.)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: File uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/user/me:
+    get:
+      tags: [User]
+      summary: Get the currently authenticated user's profile
+      responses:
+        '200':
+          description: User profile returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/user/online-users:
+    get:
+      tags: [User]
+      summary: Get list of IDs of online friends
+      responses:
+        '200':
+          description: List of online users
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/user/get-user-by-username-or-email/{userNameOrEmail}:
+    get:
+      tags: [User]
+      summary: Search user by username or email (fuzzy search)
+      parameters:
+        - in: path
+          name: userNameOrEmail
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Users retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/user/add-user-to-friends/{friendEmail}:
+    post:
+      tags: [User]
+      summary: Add a user to the authenticated user's friend list
+      parameters:
+        - in: path
+          name: friendEmail
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Friend added and direct chat created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/user/update-profile:
+    put:
+      tags: [User]
+      summary: Update the profile (name, username, avatar URL)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                userName:
+                  type: string
+                avatar:
+                  type: string
+              required: [name, userName]
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/user/check-username/{userName}:
+    get:
+      tags: [User]
+      summary: Check if a username is available
+      parameters:
+        - in: path
+          name: userName
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Availability information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/user/upload-avatar:
+    post:
+      tags: [User]
+      summary: Upload a new avatar image
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                avatar:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Avatar uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+x-socketio:
+  namespace: "/"
+  description: |
+    Real-time communication is powered by Socket.IO. The handshake URL is the default
+    `/socket.io` endpoint on the same host as the REST API. All connections **must** send a
+    JWT (or Firebase token) via the `auth.token` field during the Socket.IO connection
+    (see implementation in `SocketAuth.middleware.ts`).
+  events:
+    client->server:
+      sendMessage:
+        summary: Send a chat message.
+        payload: Message
+      editMessage:
+        summary: Edit an existing message.
+        payload:
+          type: object
+          properties:
+            messageId:
+              type: string
+            content:
+              type: string
+      deleteMessage:
+        summary: Delete a message for everyone.
+        payload:
+          $ref: '#/components/schemas/Message'
+      addChat:
+        summary: Create a new direct chat between two users.
+        payload: Chat
+      openChat:
+        summary: Mark a chat as currently opened (used for read receipts).
+        payload:
+          type: object
+          properties:
+            chatId:
+              type: string
+    server->client:
+      newMessage:
+        summary: Receive a newly created message in a chat room.
+        payload: Message
+      updateEditMessage:
+        summary: Receive updated message after edit.
+        payload: Message
+      updateDeleteMessage:
+        summary: Notification that a message has been deleted.
+        payload: Message
+      updateAddChat:
+        summary: Notification that a new chat has been created.
+        payload: Chat
+      online:
+        summary: Notification that a user has come online.
+        payload:
+          type: string
+          description: User ID
+      offline:
+        summary: Notification that a user has gone offline.
+        payload:
+          type: string
+          description: User ID 

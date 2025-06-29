@@ -12,6 +12,9 @@ import { initializeSocket } from "./services/socket.service";
 import chatRoutes from "./routes/chat.routes";
 import messageRoutes from "./routes/message.routes";
 import userRoutes from "./routes/user.routes";
+import path from "path";
+import swaggerUi from "swagger-ui-express";
+import YAML from "yamljs";
 
 /* CONFIGURATION */
 dotenv.config();
@@ -22,6 +25,9 @@ app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
 app.use(morgan("common"));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
+
+const swaggerDocument = YAML.load(path.resolve("src/docs/openapi.yaml"));
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 /* ROUTES */
 app.get("/", (req, res) => {

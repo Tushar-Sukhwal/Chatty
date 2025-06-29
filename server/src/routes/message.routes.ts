@@ -5,7 +5,22 @@ import { uploadSingle, handleMulterError } from "../middleware/multer.middleware
 
 const router = Router();
 
+/**
+ * Message Routes
+ *
+ * Base path: /api/message
+ *
+ * GET  /         – Retrieve all messages for current user
+ * POST /upload   – Upload a file (handled by multer)
+ */
+
 router.get("/", verifyFirebaseToken, MessagesController.getAllMessages);
-router.post("/upload", verifyFirebaseToken, uploadSingle, handleMulterError, MessagesController.uploadFile);
+router.post(
+  "/upload",
+  verifyFirebaseToken,
+  uploadSingle,
+  handleMulterError,
+  MessagesController.uploadFile
+);
 
 export default router;

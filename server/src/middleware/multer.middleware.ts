@@ -2,6 +2,16 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 
+/**
+ * Multer Middleware & Helpers
+ *
+ * Provides single and multiple file upload middlewares with:
+ * • Dynamic disk storage location (`uploads/`) – created on startup if missing.
+ * • File-type whitelisting for images, documents, videos and audio.
+ * • 10 MB size limit and max 5 files when using `uploadMultiple`.
+ * • Express error-handling middleware `handleMulterError` for graceful responses.
+ */
+
 // Create uploads directory if it doesn't exist
 const uploadDir = "uploads/";
 if (!fs.existsSync(uploadDir)) {
@@ -25,12 +35,7 @@ const storage = multer.diskStorage({
 // File filter function
 const fileFilter = (req: any, file: any, cb: any) => {
   // Define allowed file types
-  const allowedImageTypes = [
-    "image/jpeg",
-    "image/png",
-    "image/gif",
-    "image/webp",
-  ];
+  const allowedImageTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
   const allowedDocumentTypes = [
     "application/pdf",
     "application/msword",
@@ -41,12 +46,7 @@ const fileFilter = (req: any, file: any, cb: any) => {
     "application/vnd.openxmlformats-officedocument.presentationml.presentation",
     "text/plain",
   ];
-  const allowedVideoTypes = [
-    "video/mp4",
-    "video/avi",
-    "video/mov",
-    "video/wmv",
-  ];
+  const allowedVideoTypes = ["video/mp4", "video/avi", "video/mov", "video/wmv"];
   const allowedAudioTypes = ["audio/mp3", "audio/wav", "audio/mpeg"];
 
   const allAllowedTypes = [
@@ -60,9 +60,7 @@ const fileFilter = (req: any, file: any, cb: any) => {
     cb(null, true);
   } else {
     cb(
-      new Error(
-        "Invalid file type. Only images, documents, videos, and audio files are allowed."
-      )
+      new Error("Invalid file type. Only images, documents, videos, and audio files are allowed.")
     );
   }
 };

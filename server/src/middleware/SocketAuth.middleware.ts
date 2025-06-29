@@ -1,6 +1,15 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.model";
 
+/**
+ * Socket Authentication Middleware
+ *
+ * Expects a `token` field inside `socket.handshake.auth`.
+ * The token is validated as a backend-issued JWT. After validation the user's
+ * MongoDB `_id` and `userName` are attached to the socket instance for later use.
+ *
+ * If authentication fails the connection is rejected with an `Authentication error`.
+ */
 export const socketAuthMiddleware = async (socket: any, next: any) => {
   try {
     //bearer token

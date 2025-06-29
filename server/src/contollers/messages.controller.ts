@@ -5,7 +5,19 @@ import User from "../models/User.model";
 import Chat from "../models/Chat.model";
 import cloudinaryUtils from "../utils/cloudinary";
 
+/**
+ * @class MessagesController
+ * @description Provides message retrieval and file upload capabilities.
+ *
+ * @remarks All routes are prefixed with `/api/message`.
+ */
 export class MessagesController {
+  /**
+   * @description Fetch **all** messages for every chat the authenticated user is a participant of.
+   * @route GET /api/message
+   * @param req Express Request – derives the user from `req.user.email`.
+   * @param res Express Response – returns an array of messages grouped by chat.
+   */
   static async getAllMessages(req: Request, res: Response) {
     const userEmail = req.user?.email;
     const user = await User.findOne({ email: userEmail });
@@ -24,6 +36,12 @@ export class MessagesController {
     });
   }
 
+  /**
+   * @description Upload an arbitrary file (image, video, audio, document, etc.) and return a normalized metadata object.
+   * @route POST /api/message/upload
+   * @param req Express Request – expects a `file` field in multipart/form-data.
+   * @param res Express Response – returns the hosted file URL plus derived `type`.
+   */
   static async uploadFile(req: Request, res: Response) {
     try {
       if (!req.file) {

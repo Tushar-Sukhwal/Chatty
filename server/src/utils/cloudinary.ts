@@ -22,6 +22,16 @@ interface CloudinaryResponse {
   duration?: number;
 }
 
+/**
+ * Cloudinary Utilities
+ *
+ * Provides helper methods to:
+ *   • Upload local files to a structured folder on Cloudinary with automatic
+ *     resource-type detection (image / video / raw).
+ *   • Delete a Cloudinary asset by `public_id`.
+ *   • Infer high-level message type (`image`, `video`, `audio`, `document`) from
+ *     Cloudinary metadata – consumed by the messaging UI.
+ */
 const uploadOnCloudinary = async (
   localFilePath: string,
   folder: string = "chatty-files"

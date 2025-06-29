@@ -1,71 +1,61 @@
 import { Schema } from "mongoose";
 import redis from "../config/redis.config";
 
+/**
+ * @class RedisService
+ * @description Thin wrapper around Redis commands used by the realtime layer.
+ *
+ * Key patterns utilised:
+ *   • `online:<mongoId>`                – Boolean online status.
+ *   • `socketIdToMongoId:<socketId>`    – Map Socket.IO ID → MongoDB user ID.
+ *   • `mongoIdToSocketId:<mongoId>`     – Map MongoDB user ID → Socket.IO ID.
+ *   • `openChat:<mongoId>`              – Chat currently open on the client.
+ */
 export class RedisService {
   //Online state management
-  static async setOnlineStatus(
-    mongoId: Schema.Types.ObjectId,
-    isOnline: boolean
-  ) {
+  static async setOnlineStatus(mongoId: Schema.Types.ObjectId, isOnline: boolean) {
     const key = `online:${mongoId}`;
     const value = isOnline ? "true" : "false";
     await redis.set(key, value);
   }
 
-  static async setSocketIdToMongoId(
-    socketId: string,
-    mongoId: Schema.Types.ObjectId
-  ) {
+  static async setSocketIdToMongoId(socketId: string, mongoId: Schema.Types.ObjectId) {
     const key = `socketIdToMongoId:${socketId}`;
     await redis.set(key, mongoId.toString());
   }
 
-  static async setMongoIdToSocketId(
-    mongoId: Schema.Types.ObjectId,
-    socketId: string
-  ) {
+  static async setMongoIdToSocketId(mongoId: Schema.Types.ObjectId, socketId: string) {
     const key = `mongoIdToSocketId:${mongoId}`;
     await redis.set(key, socketId);
   }
 
-  static async setOpenChat(
-    mongoId: Schema.Types.ObjectId,
-    chatId: Schema.Types.ObjectId
-  ) {
+  static async setOpenChat(mongoId: Schema.Types.ObjectId, chatId: Schema.Types.ObjectId) {
     const key = `openChat:${mongoId}`;
     await redis.set(key, chatId.toString());
   }
 
-  static async getSocketIdFromMongoId(
-    mongoId: Schema.Types.ObjectId
-  ): Promise<string | null> {
+  static async getSocketIdFromMongoId(mongoId: Schema.Types.ObjectId): Promise<string | null> {
     const key = `mongoIdToSocketId:${mongoId}`;
     return await redis.get(key);
   }
 
-  static async getMongoIdFromSocketId(
-    socketId: string
-  ): Promise<string | null> {
+  static async getMongoIdFromSocketId(socketId: string): Promise<string | null> {
     const key = `socketIdToMongoId:${socketId}`;
     return await redis.get(key);
   }
 
   static async getOnlineUsers(): Promise<string[]> {
     const keys = await redis.keys("online:*");
-    return keys.map((key) => key.split(":")[1]);
+    return keys.map(key => key.split(":")[1]);
   }
 
-  static async getOnlineStatus(
-    mongoId: Schema.Types.ObjectId
-  ): Promise<boolean> {
+  static async getOnlineStatus(mongoId: Schema.Types.ObjectId): Promise<boolean> {
     const key = `online:${mongoId}`;
     const value = await redis.get(key);
     return value === "true";
   }
 
-  static async getOpenChat(
-    mongoId: Schema.Types.ObjectId
-  ): Promise<Schema.Types.ObjectId | null> {
+  static async getOpenChat(mongoId: Schema.Types.ObjectId): Promise<Schema.Types.ObjectId | null> {
     const key = `openChat:${mongoId}`;
     const chatId = await redis.get(key);
     return chatId ? new Schema.Types.ObjectId(chatId) : null;
@@ -76,10 +66,7 @@ export class RedisService {
     await redis.del(key);
   }
 
-  static async socketDisconnectProcess(
-    socketId: string,
-    mongoId: Schema.Types.ObjectId
-  ) {
+  static async socketDisconnectProcess(socketId: string, mongoId: Schema.Types.ObjectId) {
     if (!mongoId) return;
     await this.setOnlineStatus(mongoId, false);
     // Remove the mapping keys from Redis
