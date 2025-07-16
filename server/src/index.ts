@@ -15,6 +15,8 @@ import userRoutes from "./routes/user.routes";
 import path from "path";
 import swaggerUi from "swagger-ui-express";
 import YAML from "yamljs";
+import { connectKafkaProducer, connectKafkaConsumer, disconnectKafka } from "./config/kafka.config";
+import { KafkaService } from "./services/kafka.service";
 
 /* CONFIGURATION */
 dotenv.config();
@@ -39,15 +41,51 @@ app.use("/api/chat", chatRoutes);
 app.use("/api/message", messageRoutes);
 app.use("/api/user", userRoutes);
 
-connectDB();
+const initializeServices = async () => {
+  try {
+    await connectDB();
+
+    // Initialize Kafka
+    await connectKafkaProducer();
+    await connectKafkaConsumer();
+    await KafkaService.startConsumer();
+
+    console.log("All services initialized successfully");
+  } catch (error) {
+    console.error("Failed to initialize services:", error);
+    process.exit(1);
+  }
+};
 
 const PORT = process.env.PORT || 3000;
 
 const server = http.createServer(app);
 const io = initializeSocket(server);
 
-server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+// Graceful shutdown
+process.on("SIGTERM", async () => {
+  console.log("SIGTERM received, shutting down gracefully");
+  await disconnectKafka();
+  server.close(() => {
+    console.log("Server closed");
+    process.exit(0);
+  });
+});
+
+process.on("SIGINT", async () => {
+  console.log("SIGINT received, shutting down gracefully");
+  await disconnectKafka();
+  server.close(() => {
+    console.log("Server closed");
+    process.exit(0);
+  });
+});
+
+// Initialize services and start server
+initializeServices().then(() => {
+  server.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
 });
 
 export { io };

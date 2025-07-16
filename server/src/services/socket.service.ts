@@ -7,6 +7,7 @@ import Chat from "../models/Chat.model";
 import Message from "../models/Message.model";
 import { IChatDocument, IMessageDocument } from "../types/models";
 import { KafkaService } from "./kafka.service";
+import { TOPICS } from "../config/kafka.config";
 import { v4 as uuidv4 } from "uuid";
 import { Schema } from "mongoose";
 
@@ -99,14 +100,13 @@ const handleSendMessage = async (
     data.replyTo = replyToMessage.messageId!;
   }
 
-  // Push message to Kafka
-  // await KafkaService.publishMessage("NEW_MESSAGE", data);
-
-  // Push message to db
-  const newMessage = await Message.create({
-    ...data,
-    messageId: messageId,
-  });
+  // Push message to Kafka for async processing
+  try {
+    await KafkaService.publishMessage(TOPICS.NEW_MESSAGE, data);
+  } catch (error) {
+    console.error("Failed to publish message to Kafka:", error);
+    // Continue with normal flow even if Kafka fails
+  }
 
   // Respond with the messageId
 
@@ -135,6 +135,18 @@ const handleMessageDelete = async (
   message.content = "";
   message.deletedForEveryone = true;
   await message.save();
+
+  // Publish to Kafka for async processing
+  try {
+    await KafkaService.publishMessage(TOPICS.DELETE_MESSAGE, {
+      messageId: message.messageId,
+      deletedForEveryone: true,
+    } as any);
+  } catch (error) {
+    console.error("Failed to publish message deletion to Kafka:", error);
+    // Continue with normal flow even if Kafka fails
+  }
+
   callback("Message deleted successfully");
   socket.to(message.chatId.toString()).emit("updateDeleteMessage", message);
 };
@@ -154,7 +166,12 @@ const handleAddChat = async (
       },
     });
     // for each user update the chat in db through kafka
-    // TODO KafkaService.publishMessage("ADD_CHAT", data);
+    try {
+      await KafkaService.publishMessage(TOPICS.ADD_CHAT, data);
+    } catch (error) {
+      console.error("Failed to publish chat creation to Kafka:", error);
+      // Continue with normal flow even if Kafka fails
+    }
 
     if (chat) {
       callback("Chat already exists");
@@ -183,8 +200,6 @@ const handleEditMessage = async (
   data: { messageId: string; content: string },
   callback: (messageId: string) => void
 ) => {
-  //TODO: add edit message to kafka
-
   const message = await Message.findOne({ messageId: data.messageId });
   if (!message) {
     callback(
@@ -214,7 +229,22 @@ const handleEditMessage = async (
   //update the message
   message.content = data.content;
   message.isEdited = true;
+  message.editedAt = new Date();
   await message.save();
+
+  // Publish to Kafka for async processing
+  try {
+    await KafkaService.publishMessage(TOPICS.MESSAGE_STATUS_UPDATE, {
+      messageId: message.messageId,
+      content: data.content,
+      isEdited: true,
+      editedAt: message.editedAt,
+    } as any);
+  } catch (error) {
+    console.error("Failed to publish message edit to Kafka:", error);
+    // Continue with normal flow even if Kafka fails
+  }
+
   callback(
     JSON.stringify({
       message: "Message edited successfully",
@@ -231,15 +261,17 @@ const handleOpenChat = async (
   data: { chatId: string },
   callback: (messageId: string) => void
 ) => {
-  //TODO: add open chat to kafka
-
   if (data.chatId === "-1") {
     RedisService.delOpenChat(socket.mongoId!);
+    return;
   }
 
   const mongoId = socket.mongoId;
   const chatId = new Schema.Types.ObjectId(data.chatId);
   RedisService.setOpenChat(mongoId!, chatId);
+
+  // Note: We don't need Kafka for opening chat since it's just a state change
+  // that's handled in Redis for real-time presence
 };
 
 export const initializeSocket = (server: Server) => {
