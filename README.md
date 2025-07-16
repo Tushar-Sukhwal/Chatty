@@ -11,21 +11,34 @@ Chatty is a **full-stack, real-time messaging platform** that demonstrates how t
 
 ## Table of contents
 
-1. [Architecture & folder structure](#architecture--folder-structure)
-2. [Features](#features)
-3. [Demo GIF](#demo)
-4. [Getting started](#getting-started)
-   * [Prerequisites](#prerequisites)
-   * [Environment variables](#environment-variables)
-   * [Installation](#installation)
-   * [Running in development](#running-in-development)
-   * [Building for production](#building-for-production)
-5. [Backend API](#backend-api)
-6. [WebSocket contract](#websocket-contract)
-7. [Tech-stack details](#tech-stack-details)
-8. [Project scripts](#project-scripts)
-9. [Contributing](#contributing)
-10. [License](#license)
+- [Chatty – Real-time Chat Application](#chatty--real-time-chat-application)
+  - [Table of contents](#table-of-contents)
+  - [Architecture \& folder structure](#architecture--folder-structure)
+  - [Features](#features)
+    - [Realtime messaging](#realtime-messaging)
+    - [Authentication](#authentication)
+    - [Modern UI/UX](#modern-uiux)
+    - [Scalability \& observability](#scalability--observability)
+  - [Demo](#demo)
+  - [Getting started](#getting-started)
+    - [Prerequisites](#prerequisites)
+    - [Environment variables](#environment-variables)
+      - [`server/.env`](#serverenv)
+      - [`client/.env.local`](#clientenvlocal)
+    - [Installation](#installation)
+    - [Running in development](#running-in-development)
+    - [Building for production](#building-for-production)
+    - [Docker Deployment](#docker-deployment)
+      - [Using the pre-built image:](#using-the-pre-built-image)
+      - [Building locally:](#building-locally)
+  - [Backend API](#backend-api)
+  - [WebSocket contract](#websocket-contract)
+  - [Tech-stack details](#tech-stack-details)
+    - [Frontend](#frontend)
+    - [Backend](#backend)
+  - [Project scripts](#project-scripts)
+  - [Contributing](#contributing)
+  - [License](#license)
 
 ---
 
@@ -177,7 +190,32 @@ cd server && npm run build     # emits to server/dist
 cd ../client && npm run build
 ```
 
-Dockerfiles / docker-compose are not provided yet but PRs are welcome.
+### Docker Deployment
+
+The backend server is available as a Docker image on Docker Hub:
+
+**🐳 Docker Hub Repository:** [tushars07/chatty-backend](https://hub.docker.com/repository/docker/tushars07/chatty-backend/general)
+
+#### Using the pre-built image:
+
+```bash
+# Pull and run the latest image
+docker pull tushars07/chatty-backend:latest
+docker run -p 3000:3000 --env-file .env tushars07/chatty-backend:latest
+```
+
+#### Building locally:
+
+```bash
+# Build the image yourself
+cd server
+docker build -t chatty-backend .
+
+# Run with docker-compose (includes MongoDB, Redis, Kafka)
+docker-compose up -d
+```
+
+The Docker setup includes a complete stack with all dependencies. See `server/Docker-README.md` for detailed Docker configuration and deployment instructions.
 
 ---
 
